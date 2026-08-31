@@ -20,7 +20,6 @@ from shared.logging import setup_logging
 from shared.schemas.profile import EligibilityProfile
 from app.config import settings
 from app.graph.workflow import job_search_graph
-from app.services.interview_prep_service import InterviewPrepService
 from app.services.job_discovery_service import JobDiscoveryService
 from app.services.llm_factory import LLMFactory
 from app.services.match_checker_service import MatchCheckerService
@@ -65,14 +64,6 @@ class AddCareerSiteRequest(BaseModel):
     company_name: str = Field(..., description="Company name, e.g. OpenAI, Uber, Cloudflare")
     site_type: str = Field(default="greenhouse", description="Career portal type: greenhouse or lever")
     identifier: str | None = Field(default=None, description="Company slug if different from name")
-
-
-class InterviewPrepRequest(BaseModel):
-    company: str = Field(..., description="Company name, e.g. Google, Amazon, Stripe")
-    role: str = Field(default="Software Engineer", description="Job title")
-    jd_text: str | None = None
-    model_id: str | None = Field(default="gemini-3.7-flash", description="Model identifier to use")
-    use_ai: bool = Field(default=False, description="Whether to invoke LLM AI or use instant verified LeetCode/NeetCode question banks")
 
 
 class TailorResumeRequest(BaseModel):
@@ -207,19 +198,6 @@ async def add_custom_career_site(payload: AddCareerSiteRequest):
         "site": added,
         "all_sites": JobDiscoveryService.get_custom_career_sites(),
     }
-
-
-@router.post("/interview-prep")
-async def get_interview_and_dsa_prep(payload: InterviewPrepRequest) -> dict[str, Any]:
-    """Research company DSA questions, LeetCode/NeetCode resources, and Reddit interview debriefs."""
-    logger.info("generating_interview_prep", company=payload.company, role=payload.role, use_ai=payload.use_ai)
-    return await InterviewPrepService.generate_prep_doc(
-        company=payload.company,
-        role=payload.role,
-        jd_text=payload.jd_text,
-        model_id=payload.model_id,
-        use_ai=payload.use_ai,
-    )
 
 
 @router.get("/discover-jobs")

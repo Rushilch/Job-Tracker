@@ -1,0 +1,174 @@
+<div class="study-overlay">
+  <!-- Top Bar -->
+  <div class="study-topbar">
+    <div class="topbar-left">
+      <button class="btn-exit" (click)="exit()" title="Exit (Esc)">
+        <span class="material-icons-round">arrow_back</span>
+        <span>Exit Session</span>
+      </button>
+      <div class="session-info">
+        <h2>Interview Revision Mode</h2>
+        <span class="card-counter" *ngIf="deck().length > 0 && !isSessionComplete()">
+          Card {{ currentIndex() + 1 }} of {{ deck().length }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Filters & Settings in Study Mode -->
+    <div class="topbar-right">
+      <div class="filter-wrap" *ngIf="labService.tags().length > 0">
+        <select [ngModel]="selectedTag()" (ngModelChange)="selectedTag.set($event); loadDeck()" class="study-select">
+          <option value="All">All Topics</option>
+          <option *ngFor="let t of labService.tags()" [value]="t.name">{{ t.name }}</option>
+        </select>
+      </div>
+
+      <div class="filter-wrap">
+        <select [ngModel]="selectedDifficulty()" (ngModelChange)="selectedDifficulty.set($event); loadDeck()" class="study-select">
+          <option value="All">All Tiers</option>
+          <option value="Easy">Easy</option>
+          <option value="Medium">Medium</option>
+          <option value="Hard">Hard</option>
+        </select>
+      </div>
+
+      <button class="btn-shuffle" [class.active]="isShuffle()" (click)="toggleShuffle()" title="Toggle Shuffle">
+        <span class="material-icons-round">shuffle</span>
+        <span>Shuffle</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Progress Line -->
+  <div class="progress-bar-track" *ngIf="deck().length > 0 && !isSessionComplete()">
+    <div
+      class="progress-bar-fill"
+      [style.width.%]="((currentIndex() + 1) / deck().length) * 100"
+    ></div>
+  </div>
+
+  <!-- Main Flashcard Flip Arena -->
+  <div class="study-arena" *ngIf="deck().length > 0 && !isSessionComplete()">
+    <div class="flashcard-3d-scene" (click)="flipCard()">
+      <div class="flashcard-flipper" [class.flipped]="isFlipped()">
+        <!-- Front Face -->
+        <div class="card-face card-front">
+          <div class="face-header">
+            <span class="face-badge front-badge">
+              <span class="material-icons-round icon-tiny">help_outline</span>
+              QUESTION / PROMPT
+            </span>
+            <span class="difficulty-tag diff-{{ deck()[currentIndex()].difficulty.toLowerCase() }}">
+              {{ deck()[currentIndex()].difficulty }}
+            </span>
+          </div>
+
+          <div class="face-content">
+            <p class="front-prompt-text">{{ deck()[currentIndex()].front }}</p>
+          </div>
+
+          <div class="face-footer">
+            <div class="tag-chips-row" *ngIf="deck()[currentIndex()].tags.length > 0">
+              <span class="tag-chip" *ngFor="let tag of deck()[currentIndex()].tags" [style.border-color]="getTagColor(tag)">
+                <span class="dot" [style.background-color]="getTagColor(tag)"></span>
+                {{ tag }}
+              </span>
+            </div>
+            <span class="flip-hint">
+              <span class="material-icons-round icon-tiny">touch_app</span>
+              Click or press Space to reveal answer
+            </span>
+          </div>
+        </div>
+
+        <!-- Back Face -->
+        <div class="card-face card-back">
+          <div class="face-header">
+            <span class="face-badge back-badge">
+              <span class="material-icons-round icon-tiny">check_circle</span>
+              ANSWER / INSIGHT
+            </span>
+            <span class="difficulty-tag diff-{{ deck()[currentIndex()].difficulty.toLowerCase() }}">
+              {{ deck()[currentIndex()].difficulty }}
+            </span>
+          </div>
+
+          <div class="face-content">
+            <p class="back-answer-text">{{ deck()[currentIndex()].back }}</p>
+          </div>
+
+          <div class="face-footer">
+            <div class="links-row" *ngIf="deck()[currentIndex()].links.length > 0" (click)="$event.stopPropagation()">
+              <a
+                *ngFor="let link of deck()[currentIndex()].links"
+                [href]="link.url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="res-link"
+              >
+                <span class="material-icons-round icon-tiny">open_in_new</span>
+                <span>{{ link.label }}</span>
+              </a>
+            </div>
+            <span class="flip-hint">
+              <span class="material-icons-round icon-tiny">touch_app</span>
+              Click or press Space to flip back
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Navigation Controls -->
+    <div class="nav-controls">
+      <button class="btn-nav" (click)="prevCard()" [disabled]="currentIndex() === 0">
+        <span class="material-icons-round">arrow_back</span>
+        <span>Previous</span>
+      </button>
+
+      <button class="btn-flip-primary" (click)="flipCard()">
+        <span class="material-icons-round">flip</span>
+        <span>{{ isFlipped() ? 'Show Front' : 'Show Answer' }}</span>
+      </button>
+
+      <button class="btn-nav next-btn" (click)="nextCard()">
+        <span>{{ currentIndex() === deck().length - 1 ? 'Complete Session' : 'Next Card' }}</span>
+        <span class="material-icons-round">arrow_forward</span>
+      </button>
+    </div>
+
+    <div class="keyboard-hints">
+      <span><kbd>Space</kbd> Flip Card</span>
+      <span><kbd>←</kbd> Previous</span>
+      <span><kbd>→</kbd> Next</span>
+      <span><kbd>Esc</kbd> Exit</span>
+    </div>
+  </div>
+
+  <!-- Session Complete View -->
+  <div class="session-complete-card" *ngIf="isSessionComplete()">
+    <div class="trophy-wrap">
+      <span class="material-icons-round trophy-icon">military_tech</span>
+    </div>
+    <h2>Revision Deck Completed!</h2>
+    <p>You reviewed all {{ deck().length }} flashcards in this deck.</p>
+    <div class="complete-actions">
+      <button class="btn-restart" (click)="restartSession()">
+        <span class="material-icons-round">replay</span>
+        <span>Review Deck Again</span>
+      </button>
+      <button class="btn-done-exit" (click)="exit()">
+        <span class="material-icons-round">check</span>
+        <span>Finish Revision</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- No Cards in Deck -->
+  <div class="empty-deck-card" *ngIf="deck().length === 0">
+    <span class="material-icons-round icon-empty">style</span>
+    <h3>No Flashcards Found</h3>
+    <p>No cards match the selected filter criteria. Try changing filters or create new flashcards.</p>
+    <button class="btn-exit" (click)="exit()">Return to Flashcards</button>
+  </div>
+</div>

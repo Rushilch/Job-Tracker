@@ -8,6 +8,7 @@ from shared.logging import setup_logging
 from app.config import settings
 from app.database import close_db, init_db
 from app.routes.applications import router as applications_router
+from app.routes.interview_lab import router as interview_lab_router
 
 logger = setup_logging(service_name=settings.service_name, log_level=settings.log_level)
 
@@ -23,9 +24,9 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
 
 
 app = FastAPI(
-    title="Application Tracker Service",
-    description="Microservice for tracking job applications, statuses, interviews, and notes.",
-    version="0.1.0",
+    title="Application Tracker & Interview Lab Service",
+    description="Microservice for tracking job applications, statuses, interview experiences, questions, and flashcards.",
+    version="0.2.0",
     lifespan=lifespan,
     docs_url="/api/applications/docs",
     openapi_url="/api/applications/openapi.json",
@@ -42,6 +43,7 @@ app.add_middleware(
 
 # Register routes
 app.include_router(applications_router)
+app.include_router(interview_lab_router)
 
 
 @app.get("/health", tags=["Health"])

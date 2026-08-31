@@ -1,0 +1,205 @@
+<div class="questions-container">
+  <!-- Controls & Filter Toolbar -->
+  <div class="filter-toolbar">
+    <div class="search-box">
+      <span class="material-icons-round search-icon">search</span>
+      <input
+        type="text"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event); onFilterChange()"
+        placeholder="Search questions by title, topic, or notes..."
+        class="search-input"
+      />
+      <button class="btn-clear" *ngIf="searchQuery()" (click)="searchQuery.set(''); onFilterChange()">
+        <span class="material-icons-round">close</span>
+      </button>
+    </div>
+
+    <!-- Difficulty Filters -->
+    <div class="filter-group">
+      <span class="filter-label">Difficulty:</span>
+      <div class="pill-group">
+        <button
+          *ngFor="let diff of difficulties"
+          class="pill-btn"
+          [class.active]="selectedDifficulty() === diff"
+          [class.diff-easy]="diff === 'Easy' && selectedDifficulty() === diff"
+          [class.diff-medium]="diff === 'Medium' && selectedDifficulty() === diff"
+          [class.diff-hard]="diff === 'Hard' && selectedDifficulty() === diff"
+          (click)="selectedDifficulty.set(diff); onFilterChange()"
+        >
+          {{ diff }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Tag Filter Dropdown -->
+    <div class="filter-group" *ngIf="labService.tags().length > 0">
+      <span class="filter-label">Tag:</span>
+      <select
+        [ngModel]="selectedTag()"
+        (ngModelChange)="selectedTag.set($event); onFilterChange()"
+        class="tag-select"
+      >
+        <option value="All">All Tags</option>
+        <option *ngFor="let t of labService.tags()" [value]="t.name">{{ t.name }}</option>
+      </select>
+    </div>
+
+    <!-- Add Question Action Button -->
+    <button class="btn-create-q" (click)="addQuestion.emit()">
+      <span class="material-icons-round">add_circle</span>
+      <span>Add Question</span>
+    </button>
+  </div>
+
+  <!-- Questions List / Grid -->
+  <div class="questions-grid" *ngIf="labService.questions().length > 0; else noQuestions">
+    <div
+      class="question-card"
+      *ngFor="let q of labService.questions()"
+      [class.expanded]="expandedQuestions().has(q.id)"
+    >
+      <!-- Card Header -->
+      <div class="card-header" (click)="toggleExpand(q.id)">
+        <div class="meta-row">
+          <span class="difficulty-badge diff-{{ q.difficulty.toLowerCase() }}">{{ q.difficulty }}</span>
+          <span class="topic-tag" *ngIf="q.topic">{{ q.topic }}</span>
+          <span class="sol-count-tag" *ngIf="q.solutions.length > 0">
+            <span class="material-icons-round icon-tiny">menu_book</span>
+            {{ q.solutions.length }} {{ q.solutions.length === 1 ? 'Solution' : 'Solutions' }}
+          </span>
+
+          <div class="card-actions" (click)="$event.stopPropagation()">
+            <button class="btn-icon" (click)="editQuestion.emit(q)" title="Edit Question">
+              <span class="material-icons-round">edit</span>
+            </button>
+            <button class="btn-icon danger" (click)="onDelete(q, $event)" title="Delete Question">
+              <span class="material-icons-round">delete_outline</span>
+            </button>
+            <button class="btn-expand" (click)="toggleExpand(q.id); $event.stopPropagation()" [title]="expandedQuestions().has(q.id) ? 'Collapse' : 'Expand'">
+              <span class="material-icons-round">{{ expandedQuestions().has(q.id) ? 'expand_less' : 'expand_more' }}</span>
+            </button>
+          </div>
+        </div>
+
+        <h3 class="q-title">{{ q.title }}</h3>
+
+        <p class="q-desc" *ngIf="q.description">{{ q.description }}</p>
+
+        <!-- Tags and Links Bar -->
+        <div class="chips-links-row" *ngIf="q.tags.length > 0 || q.links.length > 0">
+          <div class="tags-row" *ngIf="q.tags.length > 0">
+            <span class="tag-chip" *ngFor="let tag of q.tags" [style.border-color]="getTagColor(tag)">
+              <span class="dot" [style.background-color]="getTagColor(tag)"></span>
+              <span>{{ tag }}</span>
+            </span>
+          </div>
+
+          <div class="links-row" *ngIf="q.links.length > 0" (click)="$event.stopPropagation()">
+            <a
+              *ngFor="let link of q.links"
+              [href]="link.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="res-link"
+              [title]="link.url"
+            >
+              <span class="material-icons-round icon-tiny">open_in_new</span>
+              <span>{{ link.label }}</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Expandable Solution Body -->
+      <div class="card-body" *ngIf="expandedQuestions().has(q.id)">
+        <!-- Solution Tabs if multiple solutions -->
+        <div class="solutions-nav" *ngIf="q.solutions.length > 1">
+          <button
+            *ngFor="let sol of q.solutions; let idx = index"
+            class="sol-tab-btn"
+            [class.active]="getActiveSolutionIndex(q.id) === idx"
+            (click)="setActiveSolution(q.id, idx)"
+          >
+            {{ sol.label || 'Solution ' + (idx + 1) }}
+          </button>
+        </div>
+
+        <!-- Active Solution Detail -->
+        <div class="solution-detail" *ngIf="q.solutions.length > 0 && q.solutions[getActiveSolutionIndex(q.id)]">
+          <ng-container *ngIf="q.solutions[getActiveSolutionIndex(q.id)] as curSol">
+            <!-- Complexity Row -->
+            <div class="complexity-row" *ngIf="curSol.time_complexity || curSol.space_complexity || curSol.language">
+              <span class="comp-badge lang-badge" *ngIf="curSol.language">
+                💻 {{ curSol.language.toUpperCase() }}
+              </span>
+              <span class="comp-badge" *ngIf="curSol.time_complexity">
+                ⏱ Time: <strong>{{ curSol.time_complexity }}</strong>
+              </span>
+              <span class="comp-badge" *ngIf="curSol.space_complexity">
+                💾 Space: <strong>{{ curSol.space_complexity }}</strong>
+              </span>
+              <span class="sol-approach-name" *ngIf="curSol.label">
+                Approach: <em>{{ curSol.label }}</em>
+              </span>
+            </div>
+
+            <!-- Code Block with Copy Action -->
+            <div class="code-container" *ngIf="curSol.code">
+              <div class="code-header">
+                <span class="code-lang">{{ curSol.language || 'code' }}</span>
+                <button
+                  class="btn-copy-code"
+                  (click)="copyCode(curSol.code, q.id + '-' + getActiveSolutionIndex(q.id))"
+                >
+                  <span class="material-icons-round icon-tiny">
+                    {{ copiedCodeId() === (q.id + '-' + getActiveSolutionIndex(q.id)) ? 'check' : 'content_copy' }}
+                  </span>
+                  <span>{{ copiedCodeId() === (q.id + '-' + getActiveSolutionIndex(q.id)) ? 'Copied!' : 'Copy Code' }}</span>
+                </button>
+              </div>
+              <pre class="code-block"><code>{{ curSol.code }}</code></pre>
+            </div>
+
+            <!-- Explanation Box -->
+            <div class="explanation-box" *ngIf="curSol.explanation">
+              <span class="box-title">
+                <span class="material-icons-round icon-tiny">lightbulb</span>
+                Intuition & Explanation:
+              </span>
+              <p class="explanation-text">{{ curSol.explanation }}</p>
+            </div>
+          </ng-container>
+        </div>
+
+        <!-- Personal Notes / Gotchas -->
+        <div class="notes-box" *ngIf="q.notes">
+          <span class="notes-title">
+            <span class="material-icons-round icon-tiny">sticky_note_2</span>
+            Key Takeaways & Notes:
+          </span>
+          <p class="notes-text">{{ q.notes }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <ng-template #noQuestions>
+    <div class="empty-state-card">
+      <div class="empty-icon-wrap">
+        <span class="material-icons-round empty-icon">code</span>
+      </div>
+      <h3>No LeetCode / DSA Questions Recorded</h3>
+      <p>
+        Start documenting your algorithmic solutions, complexity analysis, and links.
+        Add multiple solution approaches (Brute Force vs Optimal) to review before interviews.
+      </p>
+      <button class="btn-create-q" (click)="addQuestion.emit()">
+        <span class="material-icons-round">add</span>
+        <span>Add Your First Question</span>
+      </button>
+    </div>
+  </ng-template>
+</div>

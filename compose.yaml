@@ -50,7 +50,7 @@ services:
       - jobsearch-net
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.app-service.rule=PathPrefix(`/api/applications`)"
+      - "traefik.http.routers.app-service.rule=PathPrefix(`/api/applications`) || PathPrefix(`/api/interview-lab`)"
       - "traefik.http.routers.app-service.entrypoints=web"
       - "traefik.http.services.app-service.loadbalancer.server.port=8001"
 

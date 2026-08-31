@@ -1,0 +1,262 @@
+<div class="modal-backdrop" (click)="cancel()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="header-left">
+        <span class="material-icons-round modal-icon">forum</span>
+        <div>
+          <h2>{{ experienceToEdit ? 'Edit Interview Experience' : 'Log Interview Experience' }}</h2>
+          <p class="subtitle">Document interview loop rounds, specific questions asked, your responses, and self-rating.</p>
+        </div>
+      </div>
+      <button class="btn-close" (click)="cancel()">
+        <span class="material-icons-round">close</span>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+      <div class="error-banner" *ngIf="errorMessage()">
+        <span class="material-icons-round">warning</span>
+        <span>{{ errorMessage() }}</span>
+      </div>
+
+      <!-- Core Details Meta Row -->
+      <div class="field-row">
+        <div class="field-col flex-2">
+          <label>Company *</label>
+          <input
+            type="text"
+            [ngModel]="company()"
+            (ngModelChange)="company.set($event)"
+            placeholder="e.g. Google, Amazon, Stripe, Databricks..."
+            class="form-input"
+          />
+        </div>
+
+        <div class="field-col flex-2">
+          <label>Target Role</label>
+          <input
+            type="text"
+            [ngModel]="role()"
+            (ngModelChange)="role.set($event)"
+            placeholder="e.g. Software Engineer, Backend Lead"
+            class="form-input"
+          />
+        </div>
+
+        <div class="field-col flex-1">
+          <label>Interview Date</label>
+          <input
+            type="date"
+            [ngModel]="interviewDate()"
+            (ngModelChange)="interviewDate.set($event)"
+            class="form-input"
+          />
+        </div>
+
+        <div class="field-col flex-1">
+          <label>Status / Outcome</label>
+          <select [ngModel]="outcome()" (ngModelChange)="outcome.set($event)" class="form-select">
+            <option *ngFor="let opt of outcomes" [value]="opt">{{ opt }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Self Rating Slider (1 - 10) -->
+      <div class="rating-section">
+        <div class="rating-header">
+          <label>Self-Evaluation Rating (1 to 10)</label>
+          <span class="rating-display-badge" [class.rating-high]="rating() >= 8" [class.rating-mid]="rating() >= 5 && rating() < 8" [class.rating-low]="rating() < 5">
+            ⭐ {{ rating() }} / 10 &nbsp;•&nbsp;
+            <span *ngIf="rating() >= 9">Exceptional Performance</span>
+            <span *ngIf="rating() >= 7 && rating() < 9">Solid & Passed Key Bars</span>
+            <span *ngIf="rating() >= 5 && rating() < 7">Average / Minor Stumbles</span>
+            <span *ngIf="rating() < 5">Needs Significant Revision</span>
+          </span>
+        </div>
+
+        <div class="slider-row">
+          <input
+            type="range"
+            min="1"
+            max="10"
+            step="1"
+            [ngModel]="rating()"
+            (ngModelChange)="rating.set($event)"
+            class="rating-slider"
+          />
+          <div class="slider-ticks">
+            <span *ngFor="let num of [1,2,3,4,5,6,7,8,9,10]" [class.active]="rating() >= num">{{ num }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature: Interview Process Pipeline Builder (1 OA, 2 TA, 1 SD, etc.) -->
+      <div class="pipeline-section">
+        <div class="section-title-row">
+          <div class="title-wrap">
+            <span class="material-icons-round icon-sec">route</span>
+            <div>
+              <h3>Interview Process Pipeline</h3>
+              <p class="section-hint">Define each round in the interview process (e.g. 1 OA ➔ 2 TA ➔ 1 SD ➔ 1 BA).</p>
+            </div>
+          </div>
+          <button class="btn-add-step" (click)="addProcessStep()" type="button">
+            <span class="material-icons-round">add</span>
+            <span>Add Round Step</span>
+          </button>
+        </div>
+
+        <!-- Pipeline Steps List -->
+        <div class="process-steps-list">
+          <div class="process-step-item" *ngFor="let step of processSteps(); let i = index">
+            <span class="step-num">R{{ step.round_number }}</span>
+            <select [(ngModel)]="step.round_type" class="step-type-select">
+              <option *ngFor="let r of roundTypes" [value]="r.value">{{ r.label }}</option>
+            </select>
+            <input
+              type="text"
+              [(ngModel)]="step.description"
+              placeholder="Round focus e.g. 45 min live CoderPad, Graph BFS problem"
+              class="step-desc-input"
+            />
+            <button class="btn-del-step" (click)="removeProcessStep(i)" title="Remove step">
+              <span class="material-icons-round">close</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feature: Questions Asked & Candidate Answers -->
+      <div class="qa-section">
+        <div class="section-title-row">
+          <div class="title-wrap">
+            <span class="material-icons-round icon-sec">quiz</span>
+            <div>
+              <h3>Questions Asked & Candidate Answers</h3>
+              <p class="section-hint">Log specific technical questions, coding problems, behavioral scenarios, and how you answered.</p>
+            </div>
+          </div>
+          <button class="btn-add-qa" (click)="addQuestionQA()" type="button">
+            <span class="material-icons-round">add</span>
+            <span>Add Question Log</span>
+          </button>
+        </div>
+
+        <div class="qa-list">
+          <div class="qa-card" *ngFor="let qa of questionsAsked(); let i = index">
+            <div class="qa-card-top">
+              <span class="qa-idx">Q{{ i + 1 }}</span>
+              <select [(ngModel)]="qa.category" class="qa-cat-select">
+                <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+              </select>
+              <input
+                type="text"
+                [(ngModel)]="qa.question"
+                placeholder="What was the exact question or problem asked?"
+                class="qa-q-input"
+              />
+              <button
+                class="btn-del-qa"
+                *ngIf="questionsAsked().length > 1"
+                (click)="removeQuestionQA(i)"
+                title="Remove question"
+              >
+                <span class="material-icons-round">delete_outline</span>
+              </button>
+            </div>
+
+            <div class="qa-answer-wrap">
+              <textarea
+                [(ngModel)]="qa.answer"
+                rows="3"
+                placeholder="How did you answer? (Explain the approach you took, STAR framework, code written, or feedback given by the interviewer...)"
+                class="qa-answer-textarea"
+              ></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resource Links -->
+      <div class="links-section">
+        <label>Company & Experience Links</label>
+        <div class="existing-links-list" *ngIf="links().length > 0">
+          <div class="link-item" *ngFor="let link of links(); let i = index">
+            <span class="material-icons-round icon-link">link</span>
+            <span class="link-label">{{ link.label }}</span>
+            <a [href]="link.url" target="_blank" class="link-url">{{ link.url }}</a>
+            <button class="btn-del-link" (click)="removeLink(i)">
+              <span class="material-icons-round">close</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="add-link-row">
+          <input
+            type="text"
+            [ngModel]="newLinkLabel()"
+            (ngModelChange)="newLinkLabel.set($event)"
+            placeholder="Link Label (e.g. Glassdoor Review, Job Posting URL)"
+            class="form-input flex-1"
+          />
+          <input
+            type="url"
+            [ngModel]="newLinkUrl()"
+            (ngModelChange)="newLinkUrl.set($event)"
+            (keyup.enter)="addLink()"
+            placeholder="https://..."
+            class="form-input flex-2"
+          />
+          <button class="btn-add-link" (click)="addLink()" [disabled]="!newLinkUrl().trim()">
+            <span class="material-icons-round">add_link</span>
+            <span>Attach Link</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Custom Tags -->
+      <div class="tags-section">
+        <label>Assign Custom Tags</label>
+        <div class="tag-chips-wrap">
+          <button
+            *ngFor="let t of labService.tags()"
+            type="button"
+            class="tag-chip"
+            [class.selected]="selectedTags().includes(t.name)"
+            [style.border-color]="selectedTags().includes(t.name) ? t.color : 'transparent'"
+            (click)="toggleTag(t.name)"
+          >
+            <span class="dot" [style.background-color]="t.color"></span>
+            <span>{{ t.name }}</span>
+          </button>
+          <span class="no-tags-hint" *ngIf="labService.tags().length === 0">
+            No custom tags available. Click "Tags" in the header to create custom tags.
+          </span>
+        </div>
+      </div>
+
+      <!-- Overall Notes & Retrospective -->
+      <div class="field-group">
+        <label>Overall Retrospective & Lessons Learned</label>
+        <textarea
+          [ngModel]="overallNotes()"
+          (ngModelChange)="overallNotes.set($event)"
+          rows="3"
+          placeholder="Overall impressions, compensation discussions, interviewer vibe, things to improve next time..."
+          class="form-textarea"
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cancel()">Cancel</button>
+      <button class="btn-primary" (click)="onSave()" [disabled]="isSaving() || !company().trim()">
+        <span class="material-icons-round">save</span>
+        <span>{{ isSaving() ? 'Saving...' : (experienceToEdit ? 'Save Changes' : 'Log Experience') }}</span>
+      </button>
+    </div>
+  </div>
+</div>

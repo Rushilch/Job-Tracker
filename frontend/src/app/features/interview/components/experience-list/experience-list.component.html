@@ -1,0 +1,187 @@
+<div class="experiences-container">
+  <!-- Filter Toolbar -->
+  <div class="filter-toolbar">
+    <div class="search-box">
+      <span class="material-icons-round search-icon">search</span>
+      <input
+        type="text"
+        [ngModel]="searchCompany()"
+        (ngModelChange)="searchCompany.set($event); onFilterChange()"
+        placeholder="Filter by company name (e.g. Google, Amazon)..."
+        class="search-input"
+      />
+      <button class="btn-clear" *ngIf="searchCompany()" (click)="searchCompany.set(''); onFilterChange()">
+        <span class="material-icons-round">close</span>
+      </button>
+    </div>
+
+    <!-- Rating Filter -->
+    <div class="filter-group">
+      <span class="filter-label">Rating:</span>
+      <select
+        [ngModel]="selectedMinRating()"
+        (ngModelChange)="selectedMinRating.set($event); onFilterChange()"
+        class="filter-select"
+      >
+        <option [value]="0">All Ratings</option>
+        <option [value]="9">⭐ 9+ (Exceptional)</option>
+        <option [value]="7">⭐ 7+ (Solid / Passed)</option>
+        <option [value]="5">⭐ 5+ (Average)</option>
+      </select>
+    </div>
+
+    <!-- Tag Filter -->
+    <div class="filter-group" *ngIf="labService.tags().length > 0">
+      <span class="filter-label">Tag:</span>
+      <select
+        [ngModel]="selectedTag()"
+        (ngModelChange)="selectedTag.set($event); onFilterChange()"
+        class="filter-select"
+      >
+        <option value="All">All Tags</option>
+        <option *ngFor="let t of labService.tags()" [value]="t.name">{{ t.name }}</option>
+      </select>
+    </div>
+
+    <!-- Add Experience Button -->
+    <button class="btn-create-exp" (click)="addExperience.emit()">
+      <span class="material-icons-round">post_add</span>
+      <span>Log Experience</span>
+    </button>
+  </div>
+
+  <!-- Experience Cards List -->
+  <div class="experiences-list" *ngIf="labService.experiences().length > 0; else noExperiences">
+    <div
+      class="exp-card"
+      *ngFor="let exp of labService.experiences()"
+      [class.expanded]="expandedExperiences().has(exp.id)"
+    >
+      <!-- Card Header -->
+      <div class="card-header" (click)="toggleExpand(exp.id)">
+        <div class="header-top-row">
+          <div class="company-role-group">
+            <span class="company-badge">{{ exp.company }}</span>
+            <h3 class="role-title">{{ exp.role }}</h3>
+            <span class="date-badge" *ngIf="exp.date">
+              <span class="material-icons-round icon-tiny">event</span>
+              {{ formatDate(exp.date) }}
+            </span>
+          </div>
+
+          <div class="header-badges">
+            <!-- Outcome Badge -->
+            <span class="outcome-badge" [ngClass]="getOutcomeClass(exp.outcome)">
+              {{ exp.outcome || 'Pending' }}
+            </span>
+
+            <!-- Rating Badge (1 - 10) -->
+            <span class="rating-badge" [class.high]="exp.rating >= 8" [class.mid]="exp.rating >= 5 && exp.rating < 8" [class.low]="exp.rating < 5">
+              ⭐ {{ exp.rating }}/10
+            </span>
+
+            <!-- Card Actions -->
+            <div class="card-actions" (click)="$event.stopPropagation()">
+              <button class="btn-icon" (click)="editExperience.emit(exp)" title="Edit Experience">
+                <span class="material-icons-round">edit</span>
+              </button>
+              <button class="btn-icon danger" (click)="onDelete(exp, $event)" title="Delete Experience">
+                <span class="material-icons-round">delete_outline</span>
+              </button>
+              <button class="btn-expand" (click)="toggleExpand(exp.id); $event.stopPropagation()">
+                <span class="material-icons-round">{{ expandedExperiences().has(exp.id) ? 'expand_less' : 'expand_more' }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Pipeline Diagram Bar -->
+        <div class="pipeline-summary-bar" *ngIf="exp.interview_process.length > 0">
+          <span class="pipeline-lbl">Process Flow:</span>
+          <div class="pipeline-track">
+            <ng-container *ngFor="let step of exp.interview_process; let isLast = last">
+              <div class="pipeline-node" [title]="step.description || step.round_type">
+                <span class="node-badge">R{{ step.round_number }}: {{ step.round_type }}</span>
+                <span class="node-desc" *ngIf="step.description">{{ step.description }}</span>
+              </div>
+              <span class="pipe-arrow" *ngIf="!isLast">➔</span>
+            </ng-container>
+          </div>
+        </div>
+
+        <!-- Tags and Links Bar -->
+        <div class="chips-links-row" *ngIf="exp.tags.length > 0 || exp.links.length > 0">
+          <div class="tags-row" *ngIf="exp.tags.length > 0">
+            <span class="tag-chip" *ngFor="let tag of exp.tags" [style.border-color]="getTagColor(tag)">
+              <span class="dot" [style.background-color]="getTagColor(tag)"></span>
+              <span>{{ tag }}</span>
+            </span>
+          </div>
+
+          <div class="links-row" *ngIf="exp.links.length > 0" (click)="$event.stopPropagation()">
+            <a
+              *ngFor="let link of exp.links"
+              [href]="link.url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="res-link"
+            >
+              <span class="material-icons-round icon-tiny">open_in_new</span>
+              <span>{{ link.label }}</span>
+            </a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Expandable Body: Questions Asked & Candidate Answers -->
+      <div class="card-body" *ngIf="expandedExperiences().has(exp.id)">
+        <div class="qa-section-box" *ngIf="exp.questions_asked.length > 0">
+          <div class="qa-box-header">
+            <span class="material-icons-round icon-tiny">quiz</span>
+            <h4>Questions Asked & Candidate Responses ({{ exp.questions_asked.length }})</h4>
+          </div>
+
+          <div class="qa-feed">
+            <div class="qa-item" *ngFor="let qa of exp.questions_asked; let i = index">
+              <div class="qa-q-row">
+                <span class="qa-pill">{{ qa.category || 'Technical' }}</span>
+                <strong class="qa-q-text">"{{ qa.question }}"</strong>
+              </div>
+
+              <div class="qa-a-row" *ngIf="qa.answer">
+                <span class="a-label">Candidate Answer:</span>
+                <p class="a-text">{{ qa.answer }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Overall Retrospective -->
+        <div class="retrospective-box" *ngIf="exp.overall_notes">
+          <span class="retro-title">
+            <span class="material-icons-round icon-tiny">psychology</span>
+            Lessons Learned & Takeaways:
+          </span>
+          <p class="retro-text">{{ exp.overall_notes }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <ng-template #noExperiences>
+    <div class="empty-state-card">
+      <div class="empty-icon-wrap">
+        <span class="material-icons-round empty-icon">forum</span>
+      </div>
+      <h3>No Interview Experiences Logged Yet</h3>
+      <p>
+        Log your real interview rounds (OA, TA, System Design, HR), specific questions asked, your responses, and rate your performance.
+      </p>
+      <button class="btn-create-exp" (click)="addExperience.emit()">
+        <span class="material-icons-round">post_add</span>
+        <span>Log Your First Interview</span>
+      </button>
+    </div>
+  </ng-template>
+</div>

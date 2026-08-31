@@ -23,6 +23,10 @@ export class AppComponent implements OnInit {
   openaiKey = signal<string>('');
   anthropicKey = signal<string>('');
   githubToken = signal<string>('');
+  showGeminiKey = signal<boolean>(false);
+  showOpenaiKey = signal<boolean>(false);
+  showAnthropicKey = signal<boolean>(false);
+  showGithubToken = signal<boolean>(false);
   isSavingKeys = signal<boolean>(false);
   saveSuccessMessage = signal<string>('');
 

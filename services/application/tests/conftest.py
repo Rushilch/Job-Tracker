@@ -1,4 +1,12 @@
-"""Pytest configuration and test fixtures for Application Service."""
+import sys
+from pathlib import Path
+
+# Ensure services/application and shared are on sys.path
+_app_dir = str(Path(__file__).resolve().parent.parent)
+_shared_dir = str(Path(__file__).resolve().parent.parent.parent.parent / "shared")
+for _p in (_app_dir, _shared_dir):
+    if _p not in sys.path:
+        sys.path.insert(0, _p)
 
 import mongomock.database
 import pytest_asyncio
@@ -7,6 +15,12 @@ from beanie import init_beanie
 from mongomock_motor import AsyncMongoMockClient
 from app.main import app
 from app.models.application import ApplicationDocument
+from app.models.interview_lab import (
+    ExperienceDocument,
+    FlashCardDocument,
+    QuestionDocument,
+    TagDocument,
+)
 
 # Patch mongomock Database.list_collection_names for PyMongo 4.9+ / Beanie 2.2 compatibility
 _orig_list_collections = mongomock.database.Database.list_collection_names
@@ -29,10 +43,20 @@ async def init_test_db():
     mock_db = mock_client["test_job_search"]
     await init_beanie(
         database=mock_db,
-        document_models=[ApplicationDocument],
+        document_models=[
+            ApplicationDocument,
+            TagDocument,
+            QuestionDocument,
+            ExperienceDocument,
+            FlashCardDocument,
+        ],
     )
     yield
     await ApplicationDocument.delete_all()
+    await TagDocument.delete_all()
+    await QuestionDocument.delete_all()
+    await ExperienceDocument.delete_all()
+    await FlashCardDocument.delete_all()
 
 
 @pytest_asyncio.fixture

@@ -1,0 +1,84 @@
+<div class="modal-backdrop" (click)="close()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="header-left">
+        <span class="material-icons-round modal-icon">label</span>
+        <div>
+          <h2>Manage Custom Tags</h2>
+          <p class="subtitle">Tags are shared across LeetCode questions, interview logs, and flashcards.</p>
+        </div>
+      </div>
+      <button class="btn-close" (click)="close()">
+        <span class="material-icons-round">close</span>
+      </button>
+    </div>
+
+    <div class="modal-body">
+      <!-- Create New Tag Form -->
+      <div class="create-tag-box">
+        <label>Create New Tag</label>
+        <div class="input-row">
+          <input
+            type="text"
+            [ngModel]="newTagName()"
+            (ngModelChange)="newTagName.set($event)"
+            (keyup.enter)="onAddTag()"
+            placeholder="e.g. Dynamic Programming, Google, Behavioral..."
+            class="tag-input"
+          />
+          <button class="btn-add" (click)="onAddTag()" [disabled]="!newTagName().trim() || isSubmitting()">
+            <span class="material-icons-round">add</span>
+            <span>Add Tag</span>
+          </button>
+        </div>
+
+        <!-- Color Palette Picker -->
+        <div class="color-picker-row">
+          <span class="color-lbl">Color Accent:</span>
+          <div class="colors-wrap">
+            <button
+              *ngFor="let color of presetColors"
+              class="color-dot"
+              [style.background-color]="color"
+              [class.selected]="newTagColor() === color"
+              (click)="selectColor(color)"
+              type="button"
+            ></button>
+          </div>
+        </div>
+      </div>
+
+      <hr class="divider" />
+
+      <!-- Tag List -->
+      <div class="tag-list-section">
+        <div class="tag-list-header">
+          <h3>Existing Tags ({{ labService.tags().length }})</h3>
+        </div>
+
+        <div class="tags-container" *ngIf="labService.tags().length > 0; else noTags">
+          <div class="tag-chip-row" *ngFor="let tag of labService.tags()">
+            <span class="tag-badge" [style.border-color]="tag.color" [style.color]="tag.color">
+              <span class="dot" [style.background-color]="tag.color"></span>
+              <span class="tag-name">{{ tag.name }}</span>
+            </span>
+            <button class="btn-del-tag" (click)="onDeleteTag(tag, $event)" title="Delete tag">
+              <span class="material-icons-round">delete_outline</span>
+            </button>
+          </div>
+        </div>
+
+        <ng-template #noTags>
+          <div class="empty-tags">
+            <span class="material-icons-round">local_offer</span>
+            <p>No custom tags created yet. Add tags above to categorize questions, flashcards, and experiences.</p>
+          </div>
+        </ng-template>
+      </div>
+    </div>
+
+    <div class="modal-footer">
+      <button class="btn-done" (click)="close()">Done</button>
+    </div>
+  </div>
+</div>

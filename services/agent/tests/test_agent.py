@@ -91,24 +91,6 @@ async def test_career_sites_endpoints(agent_client: AsyncClient):
 
 
 @pytest.mark.asyncio
-async def test_interview_prep(agent_client: AsyncClient):
-    """Test interview and DSA questions research."""
-    payload = {
-        "company": "Amazon",
-        "role": "Software Development Engineer II",
-        "model_id": "heuristic",
-    }
-    res = await agent_client.post("/api/agent/interview-prep", json=payload)
-    assert res.status_code == 200
-    data = res.json()
-    assert data["company"] == "Amazon"
-    assert len(data["dsa_questions"]) >= 2
-    assert any(q["difficulty"] in ("Easy", "Medium", "Hard") for q in data["dsa_questions"])
-    assert len(data["system_design_topics"]) > 0
-    assert len(data["behavioral_questions"]) > 0
-
-
-@pytest.mark.asyncio
 async def test_discover_jobs(agent_client: AsyncClient):
     """Test live job discovery and feed scraping."""
     res = await agent_client.get("/api/agent/discover-jobs?query=Python&limit=5")
@@ -197,20 +179,4 @@ async def test_export_jobs_excel(agent_client: AsyncClient):
     assert len(res.content) > 1000  # valid binary xlsx content
 
 
-@pytest.mark.asyncio
-async def test_interview_prep_resources_and_reddit(agent_client: AsyncClient):
-    """Test that interview prep kit contains LeetCode links and Reddit debriefs."""
-    payload = {
-        "company": "Google",
-        "role": "Software Engineer",
-        "use_ai": False,
-    }
-    res = await agent_client.post("/api/agent/interview-prep", json=payload)
-    assert res.status_code == 200
-    data = res.json()
-    assert "dsa_questions" in data
-    assert len(data["dsa_questions"]) > 0
-    first_q = data["dsa_questions"][0]
-    assert "leetcode_url" in first_q or "hint" in first_q
-    assert "reddit_experiences" in data
-    assert len(data["reddit_experiences"]) > 0
+

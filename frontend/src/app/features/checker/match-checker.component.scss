@@ -85,14 +85,23 @@
 
   .form-row-2 {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     gap: 12px;
+    width: 100%;
+    box-sizing: border-box;
+
+    @media (max-width: 580px) {
+      grid-template-columns: 1fr;
+    }
   }
 
   .form-group {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    min-width: 0;
+    width: 100%;
+    box-sizing: border-box;
 
     label {
       font-size: 0.78rem;
@@ -103,6 +112,10 @@
     }
 
     input, textarea {
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      box-sizing: border-box;
       background: var(--bg-card-warm);
       border: 1.5px solid var(--border-color);
       border-radius: var(--radius-md);

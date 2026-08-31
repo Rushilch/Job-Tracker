@@ -1,0 +1,130 @@
+<div class="flashcards-container">
+  <!-- Toolbar -->
+  <div class="filter-toolbar">
+    <!-- Quick Difficulty Pills -->
+    <div class="filter-group">
+      <span class="filter-label">Difficulty:</span>
+      <div class="pill-group">
+        <button
+          *ngFor="let diff of difficulties"
+          class="pill-btn"
+          [class.active]="selectedDifficulty() === diff"
+          (click)="selectedDifficulty.set(diff); onFilterChange()"
+        >
+          {{ diff }}
+        </button>
+      </div>
+    </div>
+
+    <!-- Tag Filter -->
+    <div class="filter-group" *ngIf="labService.tags().length > 0">
+      <span class="filter-label">Topic / Tag:</span>
+      <select
+        [ngModel]="selectedTag()"
+        (ngModelChange)="selectedTag.set($event); onFilterChange()"
+        class="filter-select"
+      >
+        <option value="All">All Topics</option>
+        <option *ngFor="let t of labService.tags()" [value]="t.name">{{ t.name }}</option>
+      </select>
+    </div>
+
+    <div class="actions-right">
+      <!-- Start Study Mode Button -->
+      <button
+        class="btn-study-mode"
+        (click)="onStartStudySession()"
+        [disabled]="labService.flashcards().length === 0"
+      >
+        <span class="material-icons-round">play_arrow</span>
+        <span>Start Study Flip Session</span>
+      </button>
+
+      <!-- Add Flashcard Button -->
+      <button class="btn-create-card" (click)="addCard.emit()">
+        <span class="material-icons-round">add</span>
+        <span>New Flashcard</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Flashcards Gallery Grid -->
+  <div class="cards-grid" *ngIf="labService.flashcards().length > 0; else noCards">
+    <div
+      class="flashcard-preview-card"
+      *ngFor="let card of labService.flashcards()"
+      [class.flipped]="expandedCards().has(card.id)"
+      (click)="toggleFlip(card.id)"
+    >
+      <div class="card-top">
+        <span class="difficulty-badge diff-{{ card.difficulty.toLowerCase() }}">{{ card.difficulty }}</span>
+
+        <div class="card-actions" (click)="$event.stopPropagation()">
+          <button class="btn-icon" (click)="editCard.emit(card)" title="Edit Flashcard">
+            <span class="material-icons-round">edit</span>
+          </button>
+          <button class="btn-icon danger" (click)="onDelete(card, $event)" title="Delete Flashcard">
+            <span class="material-icons-round">delete_outline</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Content Area -->
+      <div class="card-content">
+        <!-- Front Mode (Prompt) -->
+        <div class="front-view" *ngIf="!expandedCards().has(card.id)">
+          <span class="view-tag">FRONT (PROMPT)</span>
+          <p class="prompt-text">{{ card.front }}</p>
+          <span class="click-flip-hint">Click card to reveal answer</span>
+        </div>
+
+        <!-- Back Mode (Answer) -->
+        <div class="back-view" *ngIf="expandedCards().has(card.id)">
+          <span class="view-tag answer-tag">BACK (ANSWER)</span>
+          <p class="answer-text">{{ card.back }}</p>
+          <span class="click-flip-hint">Click card to show prompt</span>
+        </div>
+      </div>
+
+      <!-- Card Footer with Tags & Links -->
+      <div class="card-bottom">
+        <div class="tags-row" *ngIf="card.tags.length > 0">
+          <span class="tag-chip" *ngFor="let tag of card.tags" [style.border-color]="getTagColor(tag)">
+            <span class="dot" [style.background-color]="getTagColor(tag)"></span>
+            {{ tag }}
+          </span>
+        </div>
+
+        <div class="links-row" *ngIf="card.links.length > 0" (click)="$event.stopPropagation()">
+          <a
+            *ngFor="let link of card.links"
+            [href]="link.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="res-link"
+            [title]="link.label"
+          >
+            <span class="material-icons-round icon-tiny">link</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Empty State -->
+  <ng-template #noCards>
+    <div class="empty-state-card">
+      <div class="empty-icon-wrap">
+        <span class="material-icons-round empty-icon">style</span>
+      </div>
+      <h3>No Flashcards in Deck</h3>
+      <p>
+        Create quick human-authored revision flashcards for algorithmic patterns, system design concepts, syntax tricks, and common questions.
+      </p>
+      <button class="btn-create-card" (click)="addCard.emit()">
+        <span class="material-icons-round">add</span>
+        <span>Create Your First Flashcard</span>
+      </button>
+    </div>
+  </ng-template>
+</div>

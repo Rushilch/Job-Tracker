@@ -6,6 +6,12 @@ import structlog
 
 from app.config import settings
 from app.models.application import ApplicationDocument
+from app.models.interview_lab import (
+    ExperienceDocument,
+    FlashCardDocument,
+    QuestionDocument,
+    TagDocument,
+)
 
 logger = structlog.get_logger(service=settings.service_name)
 
@@ -24,6 +30,10 @@ async def init_db() -> None:
         database=db,
         document_models=[
             ApplicationDocument,
+            TagDocument,
+            QuestionDocument,
+            ExperienceDocument,
+            FlashCardDocument,
         ],
     )
     logger.info("mongodb_and_beanie_initialized")

@@ -1,0 +1,128 @@
+<div class="modal-backdrop" (click)="cancel()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="header-left">
+        <span class="material-icons-round modal-icon">style</span>
+        <div>
+          <h2>{{ cardToEdit ? 'Edit Revision Flashcard' : 'Create Revision Flashcard' }}</h2>
+          <p class="subtitle">Hand-craft revision cards for concepts, algorithms, edge cases, and design patterns.</p>
+        </div>
+      </div>
+      <button class="btn-close" (click)="cancel()">
+        <span class="material-icons-round">close</span>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+      <div class="error-banner" *ngIf="errorMessage()">
+        <span class="material-icons-round">warning</span>
+        <span>{{ errorMessage() }}</span>
+      </div>
+
+      <!-- Difficulty -->
+      <div class="field-row">
+        <div class="field-col flex-1">
+          <label>Difficulty Tier</label>
+          <select [ngModel]="difficulty()" (ngModelChange)="difficulty.set($event)" class="form-select">
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Front Prompt -->
+      <div class="field-group">
+        <label>Front of Card (Question / Concept / Prompt) *</label>
+        <textarea
+          [ngModel]="front()"
+          (ngModelChange)="front.set($event)"
+          rows="3"
+          placeholder="e.g. What is the time complexity of building a heap with Floyd's algorithm vs inserting one by one?"
+          class="form-textarea"
+        ></textarea>
+      </div>
+
+      <!-- Back Answer -->
+      <div class="field-group">
+        <label>Back of Card (Answer / Core Intuition / Code Snippet) *</label>
+        <textarea
+          [ngModel]="back()"
+          (ngModelChange)="back.set($event)"
+          rows="5"
+          placeholder="Floyd's algorithm (heapify) runs in O(N) linear time because most nodes are near the bottom of the tree with small heights. Inserting elements one by one takes O(N log N)."
+          class="form-textarea"
+        ></textarea>
+      </div>
+
+      <!-- Custom Tags -->
+      <div class="tags-section">
+        <label>Assign Custom Tags</label>
+        <div class="tag-chips-wrap">
+          <button
+            *ngFor="let t of labService.tags()"
+            type="button"
+            class="tag-chip"
+            [class.selected]="selectedTags().includes(t.name)"
+            [style.border-color]="selectedTags().includes(t.name) ? t.color : 'transparent'"
+            (click)="toggleTag(t.name)"
+          >
+            <span class="dot" [style.background-color]="t.color"></span>
+            <span>{{ t.name }}</span>
+          </button>
+          <span class="no-tags-hint" *ngIf="labService.tags().length === 0">
+            No custom tags available. Click "Tags" in the header to create custom tags.
+          </span>
+        </div>
+      </div>
+
+      <!-- Resource Links -->
+      <div class="links-section">
+        <label>Resource Links</label>
+        <div class="existing-links-list" *ngIf="links().length > 0">
+          <div class="link-item" *ngFor="let link of links(); let i = index">
+            <span class="material-icons-round icon-link">link</span>
+            <span class="link-label">{{ link.label }}</span>
+            <a [href]="link.url" target="_blank" class="link-url">{{ link.url }}</a>
+            <button class="btn-del-link" (click)="removeLink(i)">
+              <span class="material-icons-round">close</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="add-link-row">
+          <input
+            type="text"
+            [ngModel]="newLinkLabel()"
+            (ngModelChange)="newLinkLabel.set($event)"
+            placeholder="Link Label"
+            class="form-input flex-1"
+          />
+          <input
+            type="url"
+            [ngModel]="newLinkUrl()"
+            (ngModelChange)="newLinkUrl.set($event)"
+            (keyup.enter)="addLink()"
+            placeholder="https://..."
+            class="form-input flex-2"
+          />
+          <button class="btn-add-link" (click)="addLink()" [disabled]="!newLinkUrl().trim()">
+            <span class="material-icons-round">add_link</span>
+            <span>Attach Link</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cancel()">Cancel</button>
+      <button class="btn-primary" (click)="onSave()" [disabled]="isSaving() || !front().trim() || !back().trim()">
+        <span class="material-icons-round">save</span>
+        <span>{{ isSaving() ? 'Saving...' : (cardToEdit ? 'Save Changes' : 'Create Flashcard') }}</span>
+      </button>
+    </div>
+  </div>
+</div>

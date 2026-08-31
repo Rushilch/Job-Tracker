@@ -4,6 +4,11 @@
     "secure": false,
     "changeOrigin": true
   },
+  "/api/interview-lab": {
+    "target": "http://localhost:8001",
+    "secure": false,
+    "changeOrigin": true
+  },
   "/api/auth": {
     "target": "http://localhost:8002",
     "secure": false,

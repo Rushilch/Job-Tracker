@@ -1,230 +1,241 @@
-<div class="interview-container">
-  <header class="interview-header">
-    <div>
-      <h1>Previous DSA & Technical Interview Lab</h1>
-      <p class="subtitle">Scraped real company interview questions, LeetCode / NeetCode resources & Reddit candidate experiences</p>
-    </div>
-    <div class="header-actions">
-      <button class="btn-ai-enhance" (click)="onFetchPrep(true)" [disabled]="isLoading()">
-        <span class="material-icons-round" [class.icon-spin]="isLoading() && useAi()">{{ (isLoading() && useAi()) ? 'sync' : 'auto_awesome' }}</span>
-        <span>{{ (isLoading() && useAi()) ? 'Enhancing with AI...' : 'Enhance with Gemini AI' }}</span>
-      </button>
-      <div class="model-select-wrap">
-        <select [ngModel]="agentService.selectedModel()" (ngModelChange)="agentService.selectedModel.set($event)">
-          <option *ngFor="let m of agentService.availableModels()" [value]="m.id">
-            {{ m.name }}
-          </option>
-        </select>
+<div class="interview-lab-page">
+  <!-- Page Header -->
+  <header class="lab-header">
+    <div class="header-titles">
+      <div class="title-with-badge">
+        <h1>Interview & Technical Knowledge Lab</h1>
+        <span class="badge-lab">Personal Knowledge Base</span>
       </div>
+      <p class="subtitle">
+        Document role-specific LeetCode solutions, interview loop experiences with pipelines, and manual revision flashcards.
+      </p>
+    </div>
+
+    <!-- Header Actions & Metric Badges -->
+    <div class="header-right-actions">
+      <!-- Export to Excel Button -->
+      <button class="btn-export-excel" (click)="exportExcel()" title="Export Interview Lab data to Excel (.xlsx)">
+        <span class="material-icons-round">table_view</span>
+        <span>Export to Excel</span>
+      </button>
+
+      <!-- Manage Tags Button -->
+      <button class="btn-tags-manager" (click)="showTagManager.set(true)" title="Manage Custom Tags">
+        <span class="material-icons-round">label</span>
+        <span>Tags ({{ labService.tags().length }})</span>
+      </button>
     </div>
   </header>
 
-  <!-- Search & Quick Selection -->
-  <div class="search-company-card">
-    <div class="input-row">
-      <div class="input-box">
-        <label>Target Company</label>
-        <div class="field-wrap">
-          <span class="material-icons-round">business</span>
-          <input
-            type="text"
-            [ngModel]="company()"
-            (ngModelChange)="company.set($event)"
-            (keyup.enter)="onFetchPrep(false)"
-            placeholder="e.g. Google, Amazon, Meta, Stripe, Netflix..."
-          />
-        </div>
+  <!-- Role / Job Application Selector Bar -->
+  <section class="role-selector-bar">
+    <div class="selector-inner">
+      <div class="role-select-lbl">
+        <span class="material-icons-round icon-role">work_outline</span>
+        <span class="lbl-text">Target Role / Job Posting:</span>
       </div>
 
-      <div class="input-box">
-        <label>Target Role</label>
-        <div class="field-wrap">
-          <span class="material-icons-round">badge</span>
-          <input
-            type="text"
-            [ngModel]="role()"
-            (ngModelChange)="role.set($event)"
-            (keyup.enter)="onFetchPrep(false)"
-            placeholder="e.g. Software Engineer, Backend Engineer"
-          />
-        </div>
+      <div class="select-dropdown-wrap">
+        <select
+          [ngModel]="selectedApplication()?.id || ''"
+          (ngModelChange)="onRoleSelect($event)"
+          class="role-dropdown"
+        >
+          <option value="">-- Choose a Tracked Application / Role --</option>
+          <option *ngFor="let app of appService.applications()" [value]="app.id">
+            {{ app.company }} — {{ app.role }} ({{ app.status }})
+          </option>
+        </select>
       </div>
 
-      <button class="btn-research" (click)="onFetchPrep(false)" [disabled]="isLoading()">
-        <span class="material-icons-round" [class.icon-spin]="isLoading()">{{ isLoading() ? 'sync' : 'travel_explore' }}</span>
-        <span>{{ isLoading() ? 'Scraping Web for Questions...' : 'Scrape Web for Debriefs & Questions' }}</span>
-      </button>
+      <!-- Quick Status if Selected -->
+      <div class="selected-app-pill" *ngIf="selectedApplication() as app">
+        <span class="app-company">{{ app.company }}</span>
+        <span class="app-role">{{ app.role }}</span>
+        <span class="app-status status-{{ app.status }}">{{ app.status }}</span>
+        <button class="btn-clear-role" (click)="selectRole(null)" title="Deselect role">
+          <span class="material-icons-round">close</span>
+        </button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Default Empty View When No Role Is Selected -->
+  <div class="empty-role-prompt-card" *ngIf="!selectedApplication()">
+    <div class="prompt-icon-wrap">
+      <span class="material-icons-round prompt-icon">badge</span>
+    </div>
+    <h2>Select a Target Job Posting to Begin</h2>
+    <p>
+      Please select a role from your job applications above to view, organize, and add customized LeetCode problem solutions, interview loop round experiences, and flashcards.
+    </p>
+
+    <!-- Quick Role Grid from Tracker -->
+    <div class="quick-apps-section" *ngIf="appService.applications().length > 0">
+      <h3>Or choose an active application from your tracker:</h3>
+      <div class="quick-apps-grid">
+        <div
+          class="quick-app-card"
+          *ngFor="let app of appService.applications().slice(0, 6)"
+          (click)="selectRole(app)"
+        >
+          <div class="app-card-top">
+            <span class="company-name">{{ app.company }}</span>
+            <span class="status-badge status-{{ app.status }}">{{ app.status }}</span>
+          </div>
+          <p class="role-name">{{ app.role }}</p>
+          <div class="app-card-foot">
+            <span class="loc-text" *ngIf="app.location">📍 {{ app.location }}</span>
+            <span class="btn-open-lab">Open Prep Lab ➔</span>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <div class="quick-comp-row">
-      <span class="lbl">Top Tech Targets:</span>
+    <div class="no-tracked-apps" *ngIf="appService.applications().length === 0">
+      <p>No tracked applications found yet. Add job applications in your <a routerLink="/kanban">Tracker</a> first.</p>
+    </div>
+  </div>
+
+  <!-- Main Interview Lab Content When Role Is Selected -->
+  <div *ngIf="selectedApplication()" class="active-lab-wrapper">
+    <!-- Active Role Header Banner -->
+    <div class="active-role-banner" *ngIf="selectedApplication() as app">
+      <div class="banner-left">
+        <span class="company-tag">{{ app.company }}</span>
+        <h2>{{ app.role }}</h2>
+        <span class="status-tag status-{{ app.status }}">{{ app.status }}</span>
+      </div>
+
+      <!-- Quick Counts for this Role -->
+      <div class="banner-metrics">
+        <div class="banner-pill" (click)="setTab('questions')">
+          <span class="count">{{ labService.questions().length }}</span>
+          <span class="label">Questions</span>
+        </div>
+        <div class="banner-pill" (click)="setTab('experiences')">
+          <span class="count">{{ labService.experiences().length }}</span>
+          <span class="label">Interviews</span>
+        </div>
+        <div class="banner-pill" (click)="setTab('flashcards')">
+          <span class="count">{{ labService.flashcards().length }}</span>
+          <span class="label">Flashcards</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Primary Tab Navigation -->
+    <nav class="lab-tabs-nav">
       <button
-        class="comp-pill"
-        *ngFor="let comp of quickCompanies"
-        [class.active]="company().toLowerCase() === comp.toLowerCase()"
-        (click)="onSelectQuickCompany(comp)"
+        class="tab-btn"
+        [class.active]="activeTab() === 'questions'"
+        (click)="setTab('questions')"
       >
-        {{ comp }}
-      </button>
-    </div>
-  </div>
-
-  <!-- Error State -->
-  <div class="error-alert" *ngIf="errorMessage() && !isLoading()">
-    <span class="material-icons-round">warning</span>
-    <span>{{ errorMessage() }}</span>
-  </div>
-
-  <!-- Loading State -->
-  <div class="loading-card" *ngIf="isLoading()">
-    <div class="spinner-ring"></div>
-    <h4>Retrieving Interview Questions & Reddit Debriefs for {{ company() }}...</h4>
-    <p>Mapping to LeetCode problems, NeetCode 150 roadmaps, and community feedback.</p>
-  </div>
-
-  <!-- Results View -->
-  <div class="prep-results-layout" *ngIf="prepDoc() && !isLoading()">
-    <!-- Loop overview header -->
-    <div class="loop-overview-card">
-      <div class="overview-left">
-        <span class="company-badge">{{ prepDoc()?.company }}</span>
-        <h2>{{ prepDoc()?.role }} Interview Prep Kit</h2>
-        <span class="format-text">
-          <span class="material-icons-round">route</span>
-          {{ prepDoc()?.interview_format }}
-        </span>
-      </div>
-      <span class="engine-tag">
-        <span class="material-icons-round icon-tiny">dataset</span>
-        {{ prepDoc()?.model_used }}
-      </span>
-    </div>
-
-    <!-- Section 1: Previous DSA Questions -->
-    <div class="prep-section">
-      <div class="section-title">
         <span class="material-icons-round">code</span>
-        <h3>Previous DSA Coding Questions Asked</h3>
-        <span class="section-badge">Verified LeetCode & NeetCode Links</span>
-      </div>
+        <span>LeetCode & DSA Questions</span>
+        <span class="tab-count">{{ labService.questions().length }}</span>
+      </button>
 
-      <div class="dsa-grid">
-        <div class="dsa-card" *ngFor="let q of prepDoc()?.dsa_questions; let i = index">
-          <div class="dsa-top">
-            <span class="difficulty-badge diff-{{ q.difficulty.toLowerCase().replace('/', '-') }}">{{ q.difficulty }}</span>
-            <span class="topic-tag">{{ q.topic }}</span>
-            <span class="freq-tag">{{ q.frequency }}</span>
-          </div>
-
-          <h4 class="q-title">{{ q.title }}</h4>
-
-          <!-- Complexity Badges -->
-          <div class="complexity-row" *ngIf="q.time_complexity">
-            <span class="comp-badge">⏱ Time: {{ q.time_complexity }}</span>
-            <span class="comp-badge" *ngIf="q.space_complexity">💾 Space: {{ q.space_complexity }}</span>
-          </div>
-
-          <!-- Direct LeetCode & NeetCode resource links -->
-          <div class="resource-links-row">
-            <a [href]="q.leetcode_url || 'https://leetcode.com/problemset/'" target="_blank" class="res-link leetcode-link">
-              <span class="material-icons-round">open_in_new</span>
-              <span>Solve on LeetCode</span>
-            </a>
-            <a [href]="q.neetcode_url || 'https://neetcode.io/practice'" target="_blank" class="res-link neetcode-link">
-              <span class="material-icons-round">play_circle</span>
-              <span>NeetCode Video & Roadmap</span>
-            </a>
-          </div>
-
-          <!-- Hint Drawer -->
-          <div class="hint-container">
-            <button class="btn-toggle-hint" (click)="toggleHint(i)">
-              <span class="material-icons-round">{{ expandedHints().has(i) ? 'visibility_off' : 'lightbulb' }}</span>
-              <span>{{ expandedHints().has(i) ? 'Hide Solution Strategy' : 'Show Algorithmic Insight & Approach' }}</span>
-            </button>
-            <p class="hint-text" *ngIf="expandedHints().has(i)">{{ q.hint }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 2: Past Interview Experiences from Reddit / Blind -->
-    <div class="prep-section" *ngIf="prepDoc()?.reddit_experiences?.length">
-      <div class="section-title">
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'experiences'"
+        (click)="setTab('experiences')"
+      >
         <span class="material-icons-round">forum</span>
-        <h3>Past Candidate Experiences (Reddit r/cscareerquestions & Blind)</h3>
-        <span class="section-badge reddit-badge">Community Debriefs</span>
+        <span>Interview Logs & Pipelines</span>
+        <span class="tab-count">{{ labService.experiences().length }}</span>
+      </button>
+
+      <button
+        class="tab-btn"
+        [class.active]="activeTab() === 'flashcards'"
+        (click)="setTab('flashcards')"
+      >
+        <span class="material-icons-round">style</span>
+        <span>Revision Flashcards</span>
+        <span class="tab-count">{{ labService.flashcards().length }}</span>
+      </button>
+    </nav>
+
+    <!-- Active Tab Content Area -->
+    <main class="lab-tab-content">
+      <!-- Questions Tab -->
+      <div *ngIf="activeTab() === 'questions'">
+        <app-question-list
+          [selectedApplicationId]="selectedApplication()?.id || null"
+          [selectedCompany]="selectedApplication()?.company || null"
+          (addQuestion)="openAddQuestion()"
+          (editQuestion)="openEditQuestion($event)"
+        ></app-question-list>
       </div>
 
-      <div class="reddit-grid">
-        <div class="reddit-card" *ngFor="let exp of prepDoc()?.reddit_experiences">
-          <div class="reddit-header">
-            <span class="reddit-source-tag">
-              <span class="material-icons-round icon-tiny">forum</span>
-              {{ exp.source }}
-            </span>
-            <h4 class="reddit-title">{{ exp.title }}</h4>
-          </div>
-
-          <p class="reddit-summary">{{ exp.summary }}</p>
-
-          <div class="reddit-tips-box">
-            <span class="tips-title">💡 Candidate Gotchas & Tips:</span>
-            <p>{{ exp.tips }}</p>
-          </div>
-
-          <div class="reddit-action-row" *ngIf="exp.url">
-            <a [href]="exp.url" target="_blank" rel="noopener noreferrer" class="btn-reddit-link">
-              <span>Read Live Engineer Discussion & Breakdown</span>
-              <span class="material-icons-round">open_in_new</span>
-            </a>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- Section 3: System Design & Technical Deep Dives -->
-    <div class="two-col-grid">
-      <div class="prep-subcard">
-        <div class="subcard-title">
-          <span class="material-icons-round">hub</span>
-          <h3>System Design & Distributed Scaling</h3>
-        </div>
-        <ul class="styled-list">
-          <li *ngFor="let sd of prepDoc()?.system_design_topics">
-            <strong>{{ sd }}</strong>
-          </li>
-        </ul>
+      <!-- Experiences Tab -->
+      <div *ngIf="activeTab() === 'experiences'">
+        <app-experience-list
+          [selectedApplicationId]="selectedApplication()?.id || null"
+          [selectedCompany]="selectedApplication()?.company || null"
+          (addExperience)="openAddExperience()"
+          (editExperience)="openEditExperience($event)"
+        ></app-experience-list>
       </div>
 
-      <div class="prep-subcard">
-        <div class="subcard-title">
-          <span class="material-icons-round">terminal</span>
-          <h3>Language & Framework Deep Dives</h3>
-        </div>
-        <ul class="styled-list">
-          <li *ngFor="let dd of prepDoc()?.technical_deep_dives">{{ dd }}</li>
-        </ul>
+      <!-- Flashcards Tab -->
+      <div *ngIf="activeTab() === 'flashcards'">
+        <app-flashcard-list
+          [selectedApplicationId]="selectedApplication()?.id || null"
+          [selectedCompany]="selectedApplication()?.company || null"
+          (addCard)="openAddFlashcard()"
+          (editCard)="openEditFlashcard($event)"
+          (startStudy)="startStudySession($event)"
+        ></app-flashcard-list>
       </div>
-    </div>
-
-    <!-- Section 4: Behavioral & Culture Values (STAR Method) -->
-    <div class="prep-section">
-      <div class="section-title">
-        <span class="material-icons-round">record_voice_over</span>
-        <h3>Behavioral Rounds & Culture Questions (STAR Framework)</h3>
-      </div>
-
-      <div class="behavioral-grid">
-        <div class="behavioral-card" *ngFor="let b of prepDoc()?.behavioral_questions">
-          <span class="focus-pill">{{ b.focus }}</span>
-          <h4 class="b-question">"{{ b.question }}"</h4>
-          <div class="star-tip-box">
-            <span class="star-title">STAR Approach Strategy:</span>
-            <p>{{ b.star_tip }}</p>
-          </div>
-        </div>
-      </div>
-    </div>
+    </main>
   </div>
+
+  <!-- Modal Dialogs -->
+  <!-- Tag Manager Modal -->
+  <app-tag-manager
+    *ngIf="showTagManager()"
+    (closed)="showTagManager.set(false)"
+  ></app-tag-manager>
+
+  <!-- Question Editor Modal -->
+  <app-question-editor
+    *ngIf="showQuestionEditor()"
+    [questionToEdit]="questionToEdit()"
+    [defaultApplicationId]="selectedApplication()?.id || null"
+    [defaultCompany]="selectedApplication()?.company || null"
+    [defaultRole]="selectedApplication()?.role || null"
+    (saved)="onQuestionSaved()"
+    (cancelled)="showQuestionEditor.set(false); questionToEdit.set(null)"
+  ></app-question-editor>
+
+  <!-- Experience Editor Modal -->
+  <app-experience-editor
+    *ngIf="showExperienceEditor()"
+    [experienceToEdit]="experienceToEdit()"
+    [defaultApplicationId]="selectedApplication()?.id || null"
+    [defaultCompany]="selectedApplication()?.company || null"
+    [defaultRole]="selectedApplication()?.role || null"
+    (saved)="onExperienceSaved()"
+    (cancelled)="showExperienceEditor.set(false); experienceToEdit.set(null)"
+  ></app-experience-editor>
+
+  <!-- Flashcard Editor Modal -->
+  <app-flashcard-editor
+    *ngIf="showFlashcardEditor()"
+    [cardToEdit]="cardToEdit()"
+    [defaultApplicationId]="selectedApplication()?.id || null"
+    [defaultCompany]="selectedApplication()?.company || null"
+    (saved)="onFlashcardSaved()"
+    (cancelled)="showFlashcardEditor.set(false); cardToEdit.set(null)"
+  ></app-flashcard-editor>
+
+  <!-- Full-Screen Flashcard Study Mode -->
+  <app-flashcard-study
+    *ngIf="showStudyMode()"
+    [initialTag]="studyTag()"
+    [initialDifficulty]="studyDifficulty()"
+    (exited)="showStudyMode.set(false)"
+  ></app-flashcard-study>
 </div>

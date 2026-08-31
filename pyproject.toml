@@ -33,3 +33,14 @@ ignore = ["E501", "B008"]
 
 [tool.ruff.lint.isort]
 known-first-party = ["shared", "app"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+pythonpath = [
+    ".",
+    "shared",
+    "services/application",
+    "services/agent",
+]
+testpaths = ["services/application/tests", "services/agent/tests"]
+

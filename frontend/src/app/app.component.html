@@ -26,7 +26,7 @@
       </a>
       <a routerLink="/interview-lab" routerLinkActive="active" class="nav-link">
         <span class="material-icons-round">code</span>
-        <span>Interview & DSA Lab</span>
+        <span>Interview Lab</span>
       </a>
       <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
         <span class="material-icons-round">analytics</span>
@@ -88,58 +88,78 @@
 
           <div class="key-field">
             <div class="key-label-row">
-              <label>Google Gemini API Key (Recommended)</label>
-              <a href="https://aistudio.google.com/app/apikey" target="_blank" class="link-helper">Get Free Gemini Key ↗</a>
+              <label>Google Gemini API Key <span class="badge-rec">Recommended</span></label>
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" class="link-helper">Get Free Gemini Key ↗</a>
             </div>
-            <input
-              type="password"
-              [ngModel]="geminiKey()"
-              (ngModelChange)="geminiKey.set($event)"
-              placeholder="AIzaSy... (or set GEMINI_API_KEY in .env)"
-              class="key-input"
-            />
+            <div class="key-input-wrap">
+              <input
+                [type]="showGeminiKey() ? 'text' : 'password'"
+                [ngModel]="geminiKey()"
+                (ngModelChange)="geminiKey.set($event)"
+                placeholder="AIzaSy... (or set GEMINI_API_KEY in .env)"
+                class="key-input"
+              />
+              <button type="button" class="btn-toggle-vis" (click)="showGeminiKey.set(!showGeminiKey())" [title]="showGeminiKey() ? 'Hide Key' : 'Show Key'">
+                <span class="material-icons-round">{{ showGeminiKey() ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+            </div>
           </div>
 
           <div class="key-field">
             <div class="key-label-row">
               <label>OpenAI API Key</label>
-              <a href="https://platform.openai.com/api-keys" target="_blank" class="link-helper">Get OpenAI Key ↗</a>
+              <a href="https://platform.openai.com/api-keys" target="_blank" rel="noopener noreferrer" class="link-helper">Get OpenAI Key ↗</a>
             </div>
-            <input
-              type="password"
-              [ngModel]="openaiKey()"
-              (ngModelChange)="openaiKey.set($event)"
-              placeholder="sk-proj-... (or set OPENAI_API_KEY in .env)"
-              class="key-input"
-            />
+            <div class="key-input-wrap">
+              <input
+                [type]="showOpenaiKey() ? 'text' : 'password'"
+                [ngModel]="openaiKey()"
+                (ngModelChange)="openaiKey.set($event)"
+                placeholder="sk-proj-... (or set OPENAI_API_KEY in .env)"
+                class="key-input"
+              />
+              <button type="button" class="btn-toggle-vis" (click)="showOpenaiKey.set(!showOpenaiKey())" [title]="showOpenaiKey() ? 'Hide Key' : 'Show Key'">
+                <span class="material-icons-round">{{ showOpenaiKey() ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+            </div>
           </div>
 
           <div class="key-field">
             <div class="key-label-row">
               <label>Anthropic API Key</label>
-              <a href="https://console.anthropic.com/" target="_blank" class="link-helper">Get Claude Key ↗</a>
+              <a href="https://console.anthropic.com/" target="_blank" rel="noopener noreferrer" class="link-helper">Get Claude Key ↗</a>
             </div>
-            <input
-              type="password"
-              [ngModel]="anthropicKey()"
-              (ngModelChange)="anthropicKey.set($event)"
-              placeholder="sk-ant-... (or set ANTHROPIC_API_KEY in .env)"
-              class="key-input"
-            />
+            <div class="key-input-wrap">
+              <input
+                [type]="showAnthropicKey() ? 'text' : 'password'"
+                [ngModel]="anthropicKey()"
+                (ngModelChange)="anthropicKey.set($event)"
+                placeholder="sk-ant-... (or set ANTHROPIC_API_KEY in .env)"
+                class="key-input"
+              />
+              <button type="button" class="btn-toggle-vis" (click)="showAnthropicKey.set(!showAnthropicKey())" [title]="showAnthropicKey() ? 'Hide Key' : 'Show Key'">
+                <span class="material-icons-round">{{ showAnthropicKey() ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+            </div>
           </div>
 
           <div class="key-field">
             <div class="key-label-row">
               <label>GitHub Personal Access Token</label>
-              <a href="https://github.com/settings/tokens" target="_blank" class="link-helper">Get GitHub Token ↗</a>
+              <a href="https://github.com/settings/tokens" target="_blank" rel="noopener noreferrer" class="link-helper">Get GitHub Token ↗</a>
             </div>
-            <input
-              type="password"
-              [ngModel]="githubToken()"
-              (ngModelChange)="githubToken.set($event)"
-              placeholder="ghp_... (for matching real repositories)"
-              class="key-input"
-            />
+            <div class="key-input-wrap">
+              <input
+                [type]="showGithubToken() ? 'text' : 'password'"
+                [ngModel]="githubToken()"
+                (ngModelChange)="githubToken.set($event)"
+                placeholder="ghp_... (for matching real repositories)"
+                class="key-input"
+              />
+              <button type="button" class="btn-toggle-vis" (click)="showGithubToken.set(!showGithubToken())" [title]="showGithubToken() ? 'Hide Token' : 'Show Token'">
+                <span class="material-icons-round">{{ showGithubToken() ? 'visibility_off' : 'visibility' }}</span>
+              </button>
+            </div>
           </div>
 
           <div class="save-actions">

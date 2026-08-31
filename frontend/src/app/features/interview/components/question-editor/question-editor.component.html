@@ -1,0 +1,274 @@
+<div class="modal-backdrop" (click)="cancel()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <!-- Header -->
+    <div class="modal-header">
+      <div class="header-left">
+        <span class="material-icons-round modal-icon">code</span>
+        <div>
+          <h2>{{ questionToEdit ? 'Edit DSA Question' : 'Add LeetCode / DSA Question' }}</h2>
+          <p class="subtitle">Record your algorithmic solutions, complexity analysis, multiple approaches, and problem links.</p>
+        </div>
+      </div>
+      <button class="btn-close" (click)="cancel()">
+        <span class="material-icons-round">close</span>
+      </button>
+    </div>
+
+    <!-- Body -->
+    <div class="modal-body">
+      <div class="error-banner" *ngIf="errorMessage()">
+        <span class="material-icons-round">warning</span>
+        <span>{{ errorMessage() }}</span>
+      </div>
+
+      <!-- Core Details Meta Row -->
+      <div class="field-row">
+        <div class="field-col flex-3">
+          <label>Question Title *</label>
+          <input
+            type="text"
+            [ngModel]="title()"
+            (ngModelChange)="title.set($event)"
+            placeholder="e.g. 1. Two Sum, 15. 3Sum, 146. LRU Cache"
+            class="form-input"
+          />
+        </div>
+
+        <div class="field-col flex-1">
+          <label>Difficulty</label>
+          <select [ngModel]="difficulty()" (ngModelChange)="difficulty.set($event)" class="form-select">
+            <option value="Easy">Easy</option>
+            <option value="Medium">Medium</option>
+            <option value="Hard">Hard</option>
+          </select>
+        </div>
+
+        <div class="field-col flex-2">
+          <label>Primary Topic</label>
+          <input
+            type="text"
+            [ngModel]="topic()"
+            (ngModelChange)="topic.set($event)"
+            list="topic-options"
+            placeholder="e.g. Dynamic Programming"
+            class="form-input"
+          />
+          <datalist id="topic-options">
+            <option *ngFor="let t of popularTopics" [value]="t"></option>
+          </datalist>
+        </div>
+      </div>
+
+      <!-- Problem Statement -->
+      <div class="field-group">
+        <label>Problem Statement / Summary (Optional)</label>
+        <textarea
+          [ngModel]="description()"
+          (ngModelChange)="description.set($event)"
+          rows="2"
+          placeholder="Given an array of integers nums and an integer target, return indices of the two numbers such that they add up to target..."
+          class="form-textarea"
+        ></textarea>
+      </div>
+
+      <!-- Solutions Multi-Approach Section -->
+      <div class="solutions-section">
+        <div class="section-title-row">
+          <div class="title-wrap">
+            <span class="material-icons-round icon-sec">functions</span>
+            <div>
+              <h3>Solution Approaches & Implementations</h3>
+              <p class="section-hint">Document multiple solution variants (e.g. Approach 1: Brute Force vs Approach 2: Optimal Hash Map).</p>
+            </div>
+          </div>
+          <button class="btn-add-sol" (click)="addSolution()" type="button">
+            <span class="material-icons-round">add</span>
+            <span>Add Approach</span>
+          </button>
+        </div>
+
+        <!-- Solution Tabs Bar -->
+        <div class="solutions-tabs-bar">
+          <button
+            *ngFor="let sol of solutions(); let i = index"
+            class="sol-tab-btn"
+            [class.active]="activeSolutionIndex() === i"
+            (click)="activeSolutionIndex.set(i)"
+            type="button"
+          >
+            <span class="tab-idx">A{{ i + 1 }}</span>
+            <span class="tab-label">{{ sol.label || 'Solution ' + (i + 1) }}</span>
+            <span
+              class="material-icons-round btn-remove-tab"
+              *ngIf="solutions().length > 1"
+              (click)="removeSolution(i, $event)"
+              title="Remove Approach"
+            >close</span>
+          </button>
+        </div>
+
+        <!-- Active Solution Body Card -->
+        <div class="sol-body-card" *ngIf="solutions()[activeSolutionIndex()]">
+          <div class="sol-meta-row">
+            <div class="field-col flex-2">
+              <label>Approach Name / Strategy</label>
+              <input
+                type="text"
+                [(ngModel)]="solutions()[activeSolutionIndex()].label"
+                placeholder="e.g. Optimal One-Pass Hash Map, Two Pointers"
+                class="form-input"
+              />
+            </div>
+
+            <div class="field-col flex-1">
+              <label>Language</label>
+              <select [(ngModel)]="solutions()[activeSolutionIndex()].language" class="form-select">
+                <option *ngFor="let lang of languages" [value]="lang.value">{{ lang.label }}</option>
+              </select>
+            </div>
+
+            <div class="field-col flex-1">
+              <label>Time Complexity</label>
+              <input
+                type="text"
+                [(ngModel)]="solutions()[activeSolutionIndex()].time_complexity"
+                placeholder="e.g. O(N), O(log N)"
+                class="form-input mono"
+              />
+            </div>
+
+            <div class="field-col flex-1">
+              <label>Space Complexity</label>
+              <input
+                type="text"
+                [(ngModel)]="solutions()[activeSolutionIndex()].space_complexity"
+                placeholder="e.g. O(1), O(N)"
+                class="form-input mono"
+              />
+            </div>
+          </div>
+
+          <!-- Code Snippet -->
+          <div class="field-group">
+            <label>Solution Code</label>
+            <textarea
+              [(ngModel)]="solutions()[activeSolutionIndex()].code"
+              rows="7"
+              placeholder="class Solution:&#10;    def twoSum(self, nums: List[int], target: int) -> List[int]:&#10;        prev_map = {}&#10;        for i, n in enumerate(nums):&#10;            diff = target - n&#10;            if diff in prev_map:&#10;                return [prev_map[diff], i]&#10;            prev_map[n] = i"
+              class="form-textarea code-editor"
+            ></textarea>
+          </div>
+
+          <!-- Explanation -->
+          <div class="field-group">
+            <label>Intuition & Key Mechanism</label>
+            <textarea
+              [(ngModel)]="solutions()[activeSolutionIndex()].explanation"
+              rows="2"
+              placeholder="Why this works: As we iterate through the list, we check if the required difference exists in the hash map..."
+              class="form-textarea"
+            ></textarea>
+          </div>
+        </div>
+      </div>
+
+      <!-- Resource Links Section -->
+      <div class="links-section">
+        <div class="section-title-row">
+          <div class="title-wrap">
+            <span class="material-icons-round icon-sec">link</span>
+            <div>
+              <h3>Resource Links & References</h3>
+              <p class="section-hint">Attach links to problem page, editorial, NeetCode solution, or discussion threads.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="existing-links-list" *ngIf="links().length > 0">
+          <div class="link-item" *ngFor="let link of links(); let i = index">
+            <span class="material-icons-round icon-link">link</span>
+            <span class="link-label">{{ link.label }}</span>
+            <a [href]="link.url" target="_blank" class="link-url">{{ link.url }}</a>
+            <button class="btn-del-link" (click)="removeLink(i)" title="Remove link">
+              <span class="material-icons-round">close</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="add-link-row">
+          <input
+            type="text"
+            [ngModel]="newLinkLabel()"
+            (ngModelChange)="newLinkLabel.set($event)"
+            placeholder="Label (e.g. LeetCode Problem, NeetCode 150)"
+            class="form-input flex-1"
+          />
+          <input
+            type="url"
+            [ngModel]="newLinkUrl()"
+            (ngModelChange)="newLinkUrl.set($event)"
+            (keyup.enter)="addLink()"
+            placeholder="https://leetcode.com/problems/..."
+            class="form-input flex-2"
+          />
+          <button class="btn-add-link" (click)="addLink()" [disabled]="!newLinkUrl().trim()" type="button">
+            <span class="material-icons-round">add_link</span>
+            <span>Attach Link</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Custom Tags Picker Section -->
+      <div class="tags-section">
+        <div class="section-title-row">
+          <div class="title-wrap">
+            <span class="material-icons-round icon-sec">label</span>
+            <div>
+              <h3>Taxonomy Tags</h3>
+              <p class="section-hint">Categorize this question with company or pattern tags.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="tag-chips-wrap">
+          <button
+            *ngFor="let t of labService.tags()"
+            type="button"
+            class="tag-chip"
+            [class.selected]="selectedTags().includes(t.name)"
+            [style.border-color]="selectedTags().includes(t.name) ? t.color : 'transparent'"
+            (click)="toggleTag(t.name)"
+          >
+            <span class="dot" [style.background-color]="t.color"></span>
+            <span>{{ t.name }}</span>
+          </button>
+
+          <span class="no-tags-hint" *ngIf="labService.tags().length === 0">
+            No custom tags available. Click "Tags" in the header to create custom tags.
+          </span>
+        </div>
+      </div>
+
+      <!-- Additional Notes -->
+      <div class="field-group">
+        <label>Edge Cases & Personal Notes</label>
+        <textarea
+          [ngModel]="notes()"
+          (ngModelChange)="notes.set($event)"
+          rows="2"
+          placeholder="Edge cases: Empty list, duplicate values, negative numbers..."
+          class="form-textarea"
+        ></textarea>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="modal-footer">
+      <button class="btn-secondary" (click)="cancel()">Cancel</button>
+      <button class="btn-primary" (click)="onSave()" [disabled]="isSaving() || !title().trim()">
+        <span class="material-icons-round">save</span>
+        <span>{{ isSaving() ? 'Saving...' : (questionToEdit ? 'Save Changes' : 'Create Question') }}</span>
+      </button>
+    </div>
+  </div>
+</div>

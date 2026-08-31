@@ -39,38 +39,6 @@ export interface CareerSite {
   identifier: string;
 }
 
-export interface DSAQuestion {
-  title: string;
-  difficulty: string;
-  topic: string;
-  frequency: string;
-  hint: string;
-  leetcode_url?: string;
-  neetcode_url?: string;
-  time_complexity?: string;
-  space_complexity?: string;
-}
-
-export interface RedditExperience {
-  source: string;
-  title: string;
-  url?: string;
-  summary: string;
-  tips: string;
-}
-
-export interface InterviewPrepResult {
-  company: string;
-  role: string;
-  dsa_questions: DSAQuestion[];
-  system_design_topics: string[];
-  technical_deep_dives: string[];
-  behavioral_questions: { question: string; focus: string; star_tip: string }[];
-  reddit_experiences?: RedditExperience[];
-  interview_format: string;
-  model_used: string;
-}
-
 export interface DiscoveredJob {
   id: string;
   company: string;
@@ -162,20 +130,6 @@ export class AgentService {
         }
       })
     );
-  }
-
-  getInterviewPrep(payload: {
-    company: string;
-    role?: string;
-    jd_text?: string;
-    model_id?: string;
-    use_ai?: boolean;
-  }): Observable<InterviewPrepResult> {
-    return this.http.post<InterviewPrepResult>(`${this.baseUrl}/interview-prep`, {
-      ...payload,
-      model_id: payload.model_id || this.selectedModel(),
-      use_ai: payload.use_ai || false,
-    });
   }
 
   discoverJobs(

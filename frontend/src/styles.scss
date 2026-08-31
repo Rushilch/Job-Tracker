@@ -1,5 +1,5 @@
 /* ==========================================================================
-   CAREER PILOT: CRAFTED PAPERMESH & HOMELY STUDIO DESIGN SYSTEM
+   CAREER PILOT: CATPPUCCIN PAPER MESH DESIGN SYSTEM
    ========================================================================== */
 
 @import url('https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,500;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap');
@@ -9,64 +9,65 @@
   --font-serif: 'Lora', Georgia, serif;
   --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
-  /* --- Warm Papermesh Canvas & Linen (Light Mode) --- */
-  --bg-app: #f8f5ee;
-  --bg-mesh: radial-gradient(#d8cebe 1.1px, transparent 1.1px);
+  /* --- Catppuccin Latte Paper Mesh (Light Theme) --- */
+  --bg-app: #eff1f5;
+  --bg-mesh: radial-gradient(#bcc0cc 1.1px, transparent 1.1px);
   --bg-card: #ffffff;
-  --bg-card-warm: #fcfbfa;
-  --bg-card-hover: #f9f7f2;
-  --bg-subtle: #f2ece0;
-  --bg-sidebar: #f5efe4;
-  --bg-accent-soft: #fcf6ee;
+  --bg-card-warm: #f7f8fb;
+  --bg-card-hover: #e6e9ef;
+  --bg-subtle: #e6e9ef;
+  --bg-sidebar: #dce0e8;
+  --bg-accent-soft: #fcf1ea;
 
-  /* --- Tactile Paper Stitching & Borders --- */
-  --border-color: #e2d8c7;
-  --border-soft: #ede4d6;
-  --border-strong: #cfc1ab;
-  --border-focus: #c25e2e;
+  /* --- Tactile Paper Borders --- */
+  --border-color: #ccd0da;
+  --border-soft: #dce0e8;
+  --border-strong: #bcc0cc;
+  --border-focus: #fe640b;
 
-  /* --- Deep Antique Ink Typography --- */
-  --text-primary: #271e17;
-  --text-secondary: #57483c;
-  --text-muted: #857464;
+  /* --- Catppuccin Latte Typography --- */
+  --text-primary: #4c4f69;
+  --text-secondary: #5c5f77;
+  --text-muted: #8c8fa1;
   --text-inverse: #ffffff;
 
-  /* --- Homely Studio Natural Pigments --- */
-  --primary: #c25e2e;           /* Terracotta Ceramic */
-  --primary-hover: #a84a1e;
-  --primary-light: #faeee7;
-  --primary-soft-border: #f2c7b3;
+  /* --- Catppuccin Pigments --- */
+  --primary: #fe640b;           /* Peach */
+  --primary-hover: #e05400;
+  --primary-light: #fef1e8;
+  --primary-soft-border: #fcd7be;
 
-  --accent-sage: #386641;        /* Forest Pine & Sage */
-  --accent-sage-light: #edf5ef;
-  --accent-sage-border: #c4dec9;
+  --accent-sage: #40a02b;        /* Green */
+  --accent-sage-light: #eff8ee;
+  --accent-sage-border: #c3e5bc;
 
-  --accent-amber: #d97706;       /* Warm Ochre & Amber */
-  --accent-amber-light: #fef8ee;
-  --accent-amber-border: #fde2b4;
+  --accent-amber: #df8e1d;       /* Yellow / Ochre */
+  --accent-amber-light: #fdf6ec;
+  --accent-amber-border: #f7dcab;
 
-  --accent-navy: #284b63;        /* Vintage Fountain Pen Blue */
-  --accent-navy-light: #edf3f7;
-  --accent-navy-border: #c7dbe8;
+  --accent-navy: #1e66f5;        /* Blue */
+  --accent-navy-light: #edf3fe;
+  --accent-navy-border: #bad0fc;
 
-  --accent-terracotta: #bc4749;
-  --accent-rose: #d46a6a;
-  --accent-rose-light: #fdf0f0;
+  --accent-mauve: #8839ef;       /* Mauve */
+  --accent-terracotta: #d20f39;  /* Red */
+  --accent-rose: #ea76cb;        /* Pink */
+  --accent-rose-light: #fdf1fa;
 
   /* --- Kanban Lifecycle Stamp Tones --- */
-  --status-discovered: #526071;
-  --status-applied: #284b63;
-  --status-responded: #0d9488;
-  --status-interview: #386641;
-  --status-offer: #d97706;
-  --status-rejected: #9b2226;
-  --status-ghosted: #78716c;
+  --status-discovered: #7c7f93;
+  --status-applied: #1e66f5;
+  --status-responded: #179299;
+  --status-interview: #40a02b;
+  --status-offer: #df8e1d;
+  --status-rejected: #d20f39;
+  --status-ghosted: #9ca0b0;
 
   /* --- Tactile Multi-Layer Elevation Shadows --- */
-  --shadow-paper-sm: 0 1px 3px rgba(39, 30, 23, 0.04), 0 1px 2px rgba(39, 30, 23, 0.06);
-  --shadow-paper-md: 0 4px 14px rgba(39, 30, 23, 0.06), 0 1px 4px rgba(39, 30, 23, 0.04);
-  --shadow-paper-lg: 0 14px 28px -4px rgba(39, 30, 23, 0.09), 0 6px 12px -2px rgba(39, 30, 23, 0.05);
-  --shadow-paper-floating: 0 20px 38px rgba(39, 30, 23, 0.12), 0 8px 16px rgba(39, 30, 23, 0.06);
+  --shadow-paper-sm: 0 1px 3px rgba(76, 79, 105, 0.05), 0 1px 2px rgba(76, 79, 105, 0.06);
+  --shadow-paper-md: 0 4px 12px rgba(76, 79, 105, 0.07), 0 1px 3px rgba(76, 79, 105, 0.04);
+  --shadow-paper-lg: 0 12px 24px -4px rgba(76, 79, 105, 0.09), 0 4px 8px -2px rgba(76, 79, 105, 0.04);
+  --shadow-paper-floating: 0 18px 34px rgba(76, 79, 105, 0.12), 0 6px 14px rgba(76, 79, 105, 0.06);
 
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -74,57 +75,62 @@
   --radius-xl: 20px;
 }
 
-/* --- Dark Mode Studio Palette (Warm Espresso & Dark Linen) --- */
+/* --- Catppuccin Mocha Paper Mesh (Dark Theme) --- */
 body.dark-theme,
 [data-theme='dark'] {
-  --bg-app: #171411;
-  --bg-mesh: radial-gradient(#2d251d 1.1px, transparent 1.1px);
-  --bg-card: #221c16;
-  --bg-card-warm: #28211a;
-  --bg-card-hover: #302720;
-  --bg-subtle: #2b231b;
-  --bg-sidebar: #1b1612;
-  --bg-accent-soft: #2e241c;
+  --bg-app: #1e1e2e;
+  --bg-mesh: radial-gradient(#313244 1.1px, transparent 1.1px);
+  --bg-card: #181825;
+  --bg-card-warm: #1e1e2e;
+  --bg-card-hover: #313244;
+  --bg-subtle: #313244;
+  --bg-sidebar: #11111b;
+  --bg-accent-soft: #252538;
 
-  --border-color: #3d3126;
-  --border-soft: #4a3d31;
-  --border-strong: #594a3c;
-  --border-focus: #e07a48;
+  --border-color: #313244;
+  --border-soft: #45475a;
+  --border-strong: #585b70;
+  --border-focus: #fab387;
 
-  --text-primary: #ede3d6;
-  --text-secondary: #baa795;
-  --text-muted: #877667;
-  --text-inverse: #171411;
+  --text-primary: #cdd6f4;
+  --text-secondary: #bac2de;
+  --text-muted: #a6adc8;
+  --text-inverse: #11111b;
 
-  --primary: #e07a48;
-  --primary-hover: #f08e5c;
-  --primary-light: #3a251a;
-  --primary-soft-border: #633a25;
+  --primary: #fab387;           /* Peach */
+  --primary-hover: #f59e6c;
+  --primary-light: #342721;
+  --primary-soft-border: #5e3f30;
 
-  --accent-sage: #529663;
-  --accent-sage-light: #1c2c20;
-  --accent-sage-border: #2e4d35;
+  --accent-sage: #a6e3a1;        /* Green */
+  --accent-sage-light: #1f3323;
+  --accent-sage-border: #325a38;
 
-  --accent-amber: #f59e0b;
-  --accent-amber-light: #332612;
-  --accent-amber-border: #59431e;
+  --accent-amber: #f9e2af;       /* Yellow */
+  --accent-amber-light: #353020;
+  --accent-amber-border: #5c522f;
 
-  --accent-navy: #4d82a6;
-  --accent-navy-light: #192733;
-  --accent-navy-border: #284457;
+  --accent-navy: #89b4fa;        /* Blue */
+  --accent-navy-light: #1d2739;
+  --accent-navy-border: #2e4368;
+
+  --accent-mauve: #cba6f7;       /* Mauve */
+  --accent-terracotta: #f38ba8;  /* Red */
+  --accent-rose: #f5c2e7;        /* Pink */
+  --accent-rose-light: #362232;
 
   --shadow-paper-sm: 0 1px 3px rgba(0, 0, 0, 0.35), 0 1px 2px rgba(0, 0, 0, 0.45);
   --shadow-paper-md: 0 4px 14px rgba(0, 0, 0, 0.45), 0 1px 4px rgba(0, 0, 0, 0.35);
   --shadow-paper-lg: 0 14px 28px -4px rgba(0, 0, 0, 0.55), 0 6px 12px -2px rgba(0, 0, 0, 0.45);
   --shadow-paper-floating: 0 20px 38px rgba(0, 0, 0, 0.65), 0 8px 16px rgba(0, 0, 0, 0.5);
 
-  --status-discovered: #899ab0;
-  --status-applied: #6296b8;
-  --status-responded: #2dd4bf;
-  --status-interview: #529663;
-  --status-offer: #fbbf24;
-  --status-rejected: #f87171;
-  --status-ghosted: #a8a29e;
+  --status-discovered: #9399b2;
+  --status-applied: #89b4fa;
+  --status-responded: #94e2d5;
+  --status-interview: #a6e3a1;
+  --status-offer: #f9e2af;
+  --status-rejected: #f38ba8;
+  --status-ghosted: #6c7086;
 }
 
 /* --- Base Reset & Typography --- */
