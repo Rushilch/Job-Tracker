@@ -1,0 +1,230 @@
+<div class="interview-container">
+  <header class="interview-header">
+    <div>
+      <h1>Previous DSA & Technical Interview Lab</h1>
+      <p class="subtitle">Scraped real company interview questions, LeetCode / NeetCode resources & Reddit candidate experiences</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-ai-enhance" (click)="onFetchPrep(true)" [disabled]="isLoading()">
+        <span class="material-icons-round" [class.icon-spin]="isLoading() && useAi()">{{ (isLoading() && useAi()) ? 'sync' : 'auto_awesome' }}</span>
+        <span>{{ (isLoading() && useAi()) ? 'Enhancing with AI...' : 'Enhance with Gemini AI' }}</span>
+      </button>
+      <div class="model-select-wrap">
+        <select [ngModel]="agentService.selectedModel()" (ngModelChange)="agentService.selectedModel.set($event)">
+          <option *ngFor="let m of agentService.availableModels()" [value]="m.id">
+            {{ m.name }}
+          </option>
+        </select>
+      </div>
+    </div>
+  </header>
+
+  <!-- Search & Quick Selection -->
+  <div class="search-company-card">
+    <div class="input-row">
+      <div class="input-box">
+        <label>Target Company</label>
+        <div class="field-wrap">
+          <span class="material-icons-round">business</span>
+          <input
+            type="text"
+            [ngModel]="company()"
+            (ngModelChange)="company.set($event)"
+            (keyup.enter)="onFetchPrep(false)"
+            placeholder="e.g. Google, Amazon, Meta, Stripe, Netflix..."
+          />
+        </div>
+      </div>
+
+      <div class="input-box">
+        <label>Target Role</label>
+        <div class="field-wrap">
+          <span class="material-icons-round">badge</span>
+          <input
+            type="text"
+            [ngModel]="role()"
+            (ngModelChange)="role.set($event)"
+            (keyup.enter)="onFetchPrep(false)"
+            placeholder="e.g. Software Engineer, Backend Engineer"
+          />
+        </div>
+      </div>
+
+      <button class="btn-research" (click)="onFetchPrep(false)" [disabled]="isLoading()">
+        <span class="material-icons-round" [class.icon-spin]="isLoading()">{{ isLoading() ? 'sync' : 'travel_explore' }}</span>
+        <span>{{ isLoading() ? 'Scraping Web for Questions...' : 'Scrape Web for Debriefs & Questions' }}</span>
+      </button>
+    </div>
+
+    <div class="quick-comp-row">
+      <span class="lbl">Top Tech Targets:</span>
+      <button
+        class="comp-pill"
+        *ngFor="let comp of quickCompanies"
+        [class.active]="company().toLowerCase() === comp.toLowerCase()"
+        (click)="onSelectQuickCompany(comp)"
+      >
+        {{ comp }}
+      </button>
+    </div>
+  </div>
+
+  <!-- Error State -->
+  <div class="error-alert" *ngIf="errorMessage() && !isLoading()">
+    <span class="material-icons-round">warning</span>
+    <span>{{ errorMessage() }}</span>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-card" *ngIf="isLoading()">
+    <div class="spinner-ring"></div>
+    <h4>Retrieving Interview Questions & Reddit Debriefs for {{ company() }}...</h4>
+    <p>Mapping to LeetCode problems, NeetCode 150 roadmaps, and community feedback.</p>
+  </div>
+
+  <!-- Results View -->
+  <div class="prep-results-layout" *ngIf="prepDoc() && !isLoading()">
+    <!-- Loop overview header -->
+    <div class="loop-overview-card">
+      <div class="overview-left">
+        <span class="company-badge">{{ prepDoc()?.company }}</span>
+        <h2>{{ prepDoc()?.role }} Interview Prep Kit</h2>
+        <span class="format-text">
+          <span class="material-icons-round">route</span>
+          {{ prepDoc()?.interview_format }}
+        </span>
+      </div>
+      <span class="engine-tag">
+        <span class="material-icons-round icon-tiny">dataset</span>
+        {{ prepDoc()?.model_used }}
+      </span>
+    </div>
+
+    <!-- Section 1: Previous DSA Questions -->
+    <div class="prep-section">
+      <div class="section-title">
+        <span class="material-icons-round">code</span>
+        <h3>Previous DSA Coding Questions Asked</h3>
+        <span class="section-badge">Verified LeetCode & NeetCode Links</span>
+      </div>
+
+      <div class="dsa-grid">
+        <div class="dsa-card" *ngFor="let q of prepDoc()?.dsa_questions; let i = index">
+          <div class="dsa-top">
+            <span class="difficulty-badge diff-{{ q.difficulty.toLowerCase().replace('/', '-') }}">{{ q.difficulty }}</span>
+            <span class="topic-tag">{{ q.topic }}</span>
+            <span class="freq-tag">{{ q.frequency }}</span>
+          </div>
+
+          <h4 class="q-title">{{ q.title }}</h4>
+
+          <!-- Complexity Badges -->
+          <div class="complexity-row" *ngIf="q.time_complexity">
+            <span class="comp-badge">⏱ Time: {{ q.time_complexity }}</span>
+            <span class="comp-badge" *ngIf="q.space_complexity">💾 Space: {{ q.space_complexity }}</span>
+          </div>
+
+          <!-- Direct LeetCode & NeetCode resource links -->
+          <div class="resource-links-row">
+            <a [href]="q.leetcode_url || 'https://leetcode.com/problemset/'" target="_blank" class="res-link leetcode-link">
+              <span class="material-icons-round">open_in_new</span>
+              <span>Solve on LeetCode</span>
+            </a>
+            <a [href]="q.neetcode_url || 'https://neetcode.io/practice'" target="_blank" class="res-link neetcode-link">
+              <span class="material-icons-round">play_circle</span>
+              <span>NeetCode Video & Roadmap</span>
+            </a>
+          </div>
+
+          <!-- Hint Drawer -->
+          <div class="hint-container">
+            <button class="btn-toggle-hint" (click)="toggleHint(i)">
+              <span class="material-icons-round">{{ expandedHints().has(i) ? 'visibility_off' : 'lightbulb' }}</span>
+              <span>{{ expandedHints().has(i) ? 'Hide Solution Strategy' : 'Show Algorithmic Insight & Approach' }}</span>
+            </button>
+            <p class="hint-text" *ngIf="expandedHints().has(i)">{{ q.hint }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 2: Past Interview Experiences from Reddit / Blind -->
+    <div class="prep-section" *ngIf="prepDoc()?.reddit_experiences?.length">
+      <div class="section-title">
+        <span class="material-icons-round">forum</span>
+        <h3>Past Candidate Experiences (Reddit r/cscareerquestions & Blind)</h3>
+        <span class="section-badge reddit-badge">Community Debriefs</span>
+      </div>
+
+      <div class="reddit-grid">
+        <div class="reddit-card" *ngFor="let exp of prepDoc()?.reddit_experiences">
+          <div class="reddit-header">
+            <span class="reddit-source-tag">
+              <span class="material-icons-round icon-tiny">forum</span>
+              {{ exp.source }}
+            </span>
+            <h4 class="reddit-title">{{ exp.title }}</h4>
+          </div>
+
+          <p class="reddit-summary">{{ exp.summary }}</p>
+
+          <div class="reddit-tips-box">
+            <span class="tips-title">💡 Candidate Gotchas & Tips:</span>
+            <p>{{ exp.tips }}</p>
+          </div>
+
+          <div class="reddit-action-row" *ngIf="exp.url">
+            <a [href]="exp.url" target="_blank" rel="noopener noreferrer" class="btn-reddit-link">
+              <span>Read Live Engineer Discussion & Breakdown</span>
+              <span class="material-icons-round">open_in_new</span>
+            </a>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 3: System Design & Technical Deep Dives -->
+    <div class="two-col-grid">
+      <div class="prep-subcard">
+        <div class="subcard-title">
+          <span class="material-icons-round">hub</span>
+          <h3>System Design & Distributed Scaling</h3>
+        </div>
+        <ul class="styled-list">
+          <li *ngFor="let sd of prepDoc()?.system_design_topics">
+            <strong>{{ sd }}</strong>
+          </li>
+        </ul>
+      </div>
+
+      <div class="prep-subcard">
+        <div class="subcard-title">
+          <span class="material-icons-round">terminal</span>
+          <h3>Language & Framework Deep Dives</h3>
+        </div>
+        <ul class="styled-list">
+          <li *ngFor="let dd of prepDoc()?.technical_deep_dives">{{ dd }}</li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Section 4: Behavioral & Culture Values (STAR Method) -->
+    <div class="prep-section">
+      <div class="section-title">
+        <span class="material-icons-round">record_voice_over</span>
+        <h3>Behavioral Rounds & Culture Questions (STAR Framework)</h3>
+      </div>
+
+      <div class="behavioral-grid">
+        <div class="behavioral-card" *ngFor="let b of prepDoc()?.behavioral_questions">
+          <span class="focus-pill">{{ b.focus }}</span>
+          <h4 class="b-question">"{{ b.question }}"</h4>
+          <div class="star-tip-box">
+            <span class="star-title">STAR Approach Strategy:</span>
+            <p>{{ b.star_tip }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

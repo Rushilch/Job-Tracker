@@ -1,0 +1,141 @@
+<div class="dashboard-container">
+  <header class="dashboard-header">
+    <div>
+      <h1>Job Search Intelligence Hub</h1>
+      <p class="subtitle">AI-Driven Pipeline Overview & Application Tracking</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-export-outline" (click)="onExportExcel()" [disabled]="isExporting" title="Export pipeline to Excel">
+        <span class="material-icons-round" [class.icon-spin]="isExporting">{{ isExporting ? 'sync' : 'table_view' }}</span>
+        <span>{{ isExporting ? 'Exporting...' : 'Export Excel' }}</span>
+      </button>
+      <a routerLink="/kanban" class="btn-kanban">
+        <span class="material-icons-round">view_kanban</span>
+        <span>Open Kanban Board</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Metric Highlights -->
+  <div class="metrics-grid">
+    <div class="metric-card card-primary">
+      <div class="metric-info">
+        <span class="metric-title">Active Pipeline</span>
+        <span class="metric-value">{{ applicationService.stats()?.active_pipeline || 0 }}</span>
+      </div>
+      <span class="material-icons-round metric-icon">rocket_launch</span>
+    </div>
+
+    <div class="metric-card card-purple">
+      <div class="metric-info">
+        <span class="metric-title">Resumes Tailored</span>
+        <span class="metric-value">{{ getTailoredCount() }}</span>
+      </div>
+      <span class="material-icons-round metric-icon">auto_awesome</span>
+    </div>
+
+    <div class="metric-card card-emerald">
+      <div class="metric-info">
+        <span class="metric-title">Interviewing</span>
+        <span class="metric-value">{{ applicationService.stats()?.by_status?.interview_scheduled || 0 }}</span>
+      </div>
+      <span class="material-icons-round metric-icon">record_voice_over</span>
+    </div>
+
+    <div class="metric-card card-amber">
+      <div class="metric-info">
+        <span class="metric-title">Offers</span>
+        <span class="metric-value">{{ applicationService.stats()?.by_status?.offer || 0 }}</span>
+      </div>
+      <span class="material-icons-round metric-icon">military_tech</span>
+    </div>
+  </div>
+
+  <!-- Content Row -->
+  <div class="content-row">
+    <!-- Status Breakdown -->
+    <div class="section-card">
+      <div class="card-title">
+        <span class="material-icons-round">pie_chart</span>
+        <h3>Status Breakdown</h3>
+      </div>
+
+      <div class="breakdown-list" *ngIf="applicationService.stats()">
+        <div class="breakdown-item">
+          <div class="item-label">
+            <span class="dot dot-discovered"></span>
+            <span>Discovered</span>
+          </div>
+          <span class="item-count">{{ applicationService.stats()?.by_status?.discovered || 0 }}</span>
+        </div>
+        <div class="breakdown-item">
+          <div class="item-label">
+            <span class="dot dot-applied"></span>
+            <span>Applied</span>
+          </div>
+          <span class="item-count">{{ applicationService.stats()?.by_status?.applied || 0 }}</span>
+        </div>
+        <div class="breakdown-item">
+          <div class="item-label">
+            <span class="dot dot-responded"></span>
+            <span>Responded</span>
+          </div>
+          <span class="item-count">{{ applicationService.stats()?.by_status?.responded || 0 }}</span>
+        </div>
+        <div class="breakdown-item">
+          <div class="item-label">
+            <span class="dot dot-interview"></span>
+            <span>Interview Scheduled</span>
+          </div>
+          <span class="item-count">{{ applicationService.stats()?.by_status?.interview_scheduled || 0 }}</span>
+        </div>
+        <div class="breakdown-item">
+          <div class="item-label">
+            <span class="dot dot-offer"></span>
+            <span>Offer</span>
+          </div>
+          <span class="item-count">{{ applicationService.stats()?.by_status?.offer || 0 }}</span>
+        </div>
+        <div class="breakdown-item">
+          <div class="item-label">
+            <span class="dot dot-rejected"></span>
+            <span>Rejected</span>
+          </div>
+          <span class="item-count">{{ applicationService.stats()?.by_status?.rejected || 0 }}</span>
+        </div>
+        <div class="breakdown-item">
+          <div class="item-label">
+            <span class="dot dot-ghosted"></span>
+            <span>Ghosted</span>
+          </div>
+          <span class="item-count">{{ applicationService.stats()?.by_status?.ghosted || 0 }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Recent Applications -->
+    <div class="section-card">
+      <div class="card-title">
+        <span class="material-icons-round">history</span>
+        <h3>Recent Applications</h3>
+      </div>
+
+      <div class="recent-list">
+        <div class="recent-item" *ngFor="let app of getRecentApplications()">
+          <div class="item-main">
+            <span class="item-company">{{ app.company }}</span>
+            <span class="item-role">{{ app.role }}</span>
+          </div>
+          <div class="item-side">
+            <span class="status-pill status-{{ app.status }}">{{ app.status }}</span>
+            <span class="item-date">{{ app.created_at | date: 'shortDate' }}</span>
+          </div>
+        </div>
+
+        <div class="empty-state" *ngIf="getRecentApplications().length === 0">
+          <p>No applications yet. Head to the Kanban board to create your first application!</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

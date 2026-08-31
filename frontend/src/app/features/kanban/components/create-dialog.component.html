@@ -1,0 +1,92 @@
+<div class="modal-backdrop" (click)="onCancel()">
+  <div class="modal-card" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div class="header-title">
+        <span class="material-icons-round modal-icon">add_circle_outline</span>
+        <h3>Track New Application</h3>
+      </div>
+      <button class="btn-close" (click)="onCancel()" type="button">
+        <span class="material-icons-round">close</span>
+      </button>
+    </div>
+
+    <!-- Inline Message Banner -->
+    <div class="inline-banner" *ngIf="inlineMessage()" [class.banner-error]="inlineMessage()?.type === 'error'" [class.banner-success]="inlineMessage()?.type === 'success'">
+      <span class="material-icons-round">{{ inlineMessage()?.type === 'success' ? 'check_circle' : 'info' }}</span>
+      <span>{{ inlineMessage()?.text }}</span>
+    </div>
+
+    <form [formGroup]="form" (ngSubmit)="onSubmit()" class="modal-body">
+      <div class="form-row">
+        <div class="form-group">
+          <label>Company *</label>
+          <input type="text" formControlName="company" placeholder="e.g. Google, Stripe" />
+        </div>
+        <div class="form-group">
+          <label>Role *</label>
+          <input type="text" formControlName="role" placeholder="e.g. SWE New Grad" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <div class="label-with-action">
+            <label>Job Posting URL</label>
+            <button
+              type="button"
+              class="btn-autofill"
+              (click)="onAutoFillFromUrl()"
+              [disabled]="isScraping() || !form.get('job_url')?.value"
+              title="Scrape and extract Job Title, Company, and JD Snapshot automatically using AI"
+            >
+              <span class="material-icons-round icon-sparkle" [class.icon-spin]="isScraping()">{{ isScraping() ? 'sync' : 'auto_awesome' }}</span>
+              <span>{{ isScraping() ? 'Extracting...' : 'Auto-Fill with AI' }}</span>
+            </button>
+          </div>
+          <input type="url" formControlName="job_url" placeholder="https://careers.google.com/jobs/..." />
+        </div>
+        <div class="form-group">
+          <label>Location</label>
+          <input type="text" formControlName="location" placeholder="e.g. Remote, Seattle, WA" />
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label>Initial Status</label>
+          <select formControlName="status">
+            <option *ngFor="let opt of statusOptions" [value]="opt.value">{{ opt.label }}</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Salary / Comp</label>
+          <input type="text" formControlName="salary_range" placeholder="e.g. $130k - $160k" />
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label>Tags (comma separated)</label>
+        <input type="text" formControlName="tagsInput" placeholder="Python, Angular, Referral" />
+      </div>
+
+      <div class="form-group">
+        <label>Job Description Snapshot</label>
+        <textarea formControlName="jd_snapshot" rows="3" placeholder="Paste full JD here for AI resume tailoring..."></textarea>
+      </div>
+
+      <div class="form-group">
+        <label>Notes</label>
+        <textarea formControlName="notes" rows="2" placeholder="Recruiter name, referral info, interview details..."></textarea>
+      </div>
+
+      <div class="modal-footer">
+        <button type="button" class="btn-secondary" (click)="onCancel()">Cancel</button>
+        <button type="submit" class="btn-primary" [disabled]="form.invalid || isSubmitting()">
+          <span class="material-icons-round" *ngIf="!isSubmitting()">add_task</span>
+          <span class="material-icons-round icon-spin" *ngIf="isSubmitting()">sync</span>
+          <span>{{ isSubmitting() ? 'Saving...' : 'Add Application' }}</span>
+        </button>
+      </div>
+    </form>
+  </div>
+</div>

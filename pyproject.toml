@@ -1,0 +1,35 @@
+[project]
+name = "job-search-platform"
+version = "0.1.0"
+description = "AI-Powered Job Search Automation Platform monorepo"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = []
+
+[tool.uv.workspace]
+members = [
+    "shared",
+    "services/application",
+    "services/auth",
+    "services/agent",
+    "services/notification",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = [
+    "E",   # pycodestyle errors
+    "W",   # pycodestyle warnings
+    "F",   # pyflakes
+    "I",   # isort
+    "B",   # flake8-bugbear
+    "C4",  # flake8-comprehensions
+    "UP",  # pyupgrade
+]
+ignore = ["E501", "B008"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["shared", "app"]

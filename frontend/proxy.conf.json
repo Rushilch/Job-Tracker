@@ -1,0 +1,22 @@
+{
+  "/api/applications": {
+    "target": "http://localhost:8001",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/auth": {
+    "target": "http://localhost:8002",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/agent": {
+    "target": "http://localhost:8003",
+    "secure": false,
+    "changeOrigin": true
+  },
+  "/api/notifications": {
+    "target": "http://localhost:8004",
+    "secure": false,
+    "changeOrigin": true
+  }
+}

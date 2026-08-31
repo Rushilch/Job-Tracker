@@ -1,0 +1,250 @@
+<div class="discovery-container">
+  <header class="discovery-header">
+    <div>
+      <h1>Multi-Platform Developer Job Scraper</h1>
+      <p class="subtitle">Live multi-board scrapers powered by <strong>JobSpy</strong> (Indeed, LinkedIn, Glassdoor, ZipRecruiter, Google Jobs) + Company Career Portals (Greenhouse & Lever) + Developer Feeds</p>
+    </div>
+    <div class="header-actions">
+      <button class="btn-add-site" (click)="showAddSiteModal.set(true)">
+        <span class="material-icons-round">add_business</span>
+        <span>+ Add Career Site</span>
+      </button>
+      <button class="btn-excel" (click)="onExportExcel()" [disabled]="isExporting() || jobs().length === 0">
+        <span class="material-icons-round" [class.icon-spin]="isExporting()">{{ isExporting() ? 'sync' : 'table_view' }}</span>
+        <span>{{ isExporting() ? 'Generating Excel...' : 'Export to Excel (' + jobs().length + ' Jobs)' }}</span>
+      </button>
+      <div class="feed-badge">
+        <span class="live-pulse"></span>
+        <span>{{ jobs().length }} Jobs Loaded (Page {{ currentPage() }})</span>
+      </div>
+    </div>
+  </header>
+
+  <!-- Search and Filter Bar -->
+  <div class="search-bar-card">
+    <div class="input-group">
+      <span class="material-icons-round">search</span>
+      <input
+        type="text"
+        [ngModel]="searchQuery()"
+        (ngModelChange)="searchQuery.set($event)"
+        (keyup.enter)="onSearchJobs(true)"
+        placeholder="Role / Tech (e.g. Python, Backend, Full Stack, Angular, React)..."
+      />
+    </div>
+
+    <div class="input-group location-group">
+      <span class="material-icons-round">place</span>
+      <input
+        type="text"
+        [ngModel]="locationQuery()"
+        (ngModelChange)="locationQuery.set($event)"
+        (keyup.enter)="onSearchJobs(true)"
+        placeholder="Location (e.g. Remote, India, US, UK, Canada)"
+      />
+    </div>
+
+    <div class="select-group">
+      <span class="material-icons-round">hub</span>
+      <select [ngModel]="sourceFilter()" (ngModelChange)="sourceFilter.set($event); onSearchJobs(true)">
+        <option *ngFor="let s of sources" [value]="s.id">{{ s.label }}</option>
+      </select>
+    </div>
+
+    <div class="select-group size-select-group">
+      <span class="material-icons-round">format_list_numbered</span>
+      <select [ngModel]="pageSize()" (ngModelChange)="onPageSizeChange($event)">
+        <option *ngFor="let ps of pageSizes" [value]="ps">{{ ps }} per page</option>
+      </select>
+    </div>
+
+    <button class="btn-search" (click)="onSearchJobs(true)" [disabled]="isLoading()">
+      <span class="material-icons-round" [class.icon-spin]="isLoading()">{{ isLoading() ? 'sync' : 'travel_explore' }}</span>
+      <span>{{ isLoading() ? 'Scraping...' : 'Search Jobs' }}</span>
+    </button>
+  </div>
+
+  <!-- Quick Filter Pills -->
+  <div class="filter-controls-row">
+    <div class="quick-tags-row">
+      <span class="quick-lbl">Tech:</span>
+      <button
+        *ngFor="let tag of filterTags"
+        class="quick-pill"
+        [class.active]="searchQuery().toLowerCase() === tag.toLowerCase()"
+        (click)="onSelectQuickTag(tag)"
+      >
+        {{ tag }}
+      </button>
+    </div>
+
+    <div class="location-tags-row">
+      <span class="quick-lbl">Region:</span>
+      <button
+        *ngFor="let loc of locationOptions"
+        class="loc-pill"
+        [class.active]="locationQuery().toLowerCase() === loc.toLowerCase()"
+        (click)="onSelectLocation(loc)"
+      >
+        {{ loc }}
+      </button>
+
+      <!-- Infinite Scroll Toggle -->
+      <div class="infinite-toggle-box">
+        <label class="toggle-switch">
+          <input type="checkbox" [checked]="isInfiniteScroll()" (change)="onToggleInfiniteScroll()" />
+          <span class="slider"></span>
+        </label>
+        <span class="toggle-label">Infinite Scroll {{ isInfiniteScroll() ? 'ON' : 'OFF' }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div *ngIf="isLoading()" class="loading-state">
+    <div class="spinner-ring"></div>
+    <p>Scraping live job openings across selected boards with JobSpy & Career Portals...</p>
+  </div>
+
+  <!-- Results Grid -->
+  <div *ngIf="!isLoading()" class="jobs-grid">
+    <div *ngFor="let job of jobs()" class="job-card">
+      <div class="card-top">
+        <div>
+          <span class="company-name">{{ job.company }}</span>
+          <h3 class="role-title">{{ job.role }}</h3>
+        </div>
+        <div class="score-pill" *ngIf="job.relevance_score">
+          <span class="material-icons-round icon-tiny">auto_awesome</span>
+          <span>{{ job.relevance_score | number:'1.0-0' }}% Match</span>
+        </div>
+      </div>
+
+      <div class="meta-row">
+        <span class="meta-item">
+          <span class="material-icons-round">location_on</span>
+          <span>{{ job.location }}</span>
+        </span>
+        <span class="meta-item" *ngIf="job.min_experience">
+          <span class="material-icons-round">work_history</span>
+          <span>{{ job.min_experience }}</span>
+        </span>
+        <span class="meta-item" *ngIf="job.salary_range">
+          <span class="material-icons-round">payments</span>
+          <span>{{ job.salary_range }}</span>
+        </span>
+        <span class="source-tag">{{ job.source }}</span>
+      </div>
+
+      <div class="skills-row" *ngIf="job.extracted_skills && job.extracted_skills.length > 0">
+        <span class="skill-tag" *ngFor="let skill of job.extracted_skills">{{ skill }}</span>
+      </div>
+
+      <p class="jd-snippet">{{ job.jd_snapshot }}</p>
+
+      <div class="card-actions">
+        <a [href]="job.job_url" target="_blank" rel="noopener noreferrer" class="btn-view-job">
+          <span>Apply Direct</span>
+          <span class="material-icons-round">open_in_new</span>
+        </a>
+        <button
+          class="btn-track"
+          [class.tracked]="trackedIds().has(job.id)"
+          (click)="onTrackJob(job)"
+          [disabled]="trackedIds().has(job.id) || trackingJobId() === job.id"
+        >
+          <span class="material-icons-round" [class.icon-spin]="trackingJobId() === job.id">
+            {{ trackingJobId() === job.id ? 'sync' : (trackedIds().has(job.id) ? 'check' : 'add_task') }}
+          </span>
+          <span>{{ trackingJobId() === job.id ? 'Saving...' : (trackedIds().has(job.id) ? 'Saved' : 'Track in Kanban') }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Infinite Scroll Pagination Bar & Trigger -->
+  <div class="pagination-footer-bar" *ngIf="jobs().length > 0 && !isLoading()">
+    <div class="pagination-info">
+      <span>Showing <strong>{{ jobs().length }}</strong> live developer openings • Page <strong>{{ currentPage() }}</strong></span>
+    </div>
+
+    <div class="pagination-actions">
+      <button
+        class="btn-load-more"
+        (click)="onLoadNextPage()"
+        [disabled]="isLoadingMore() || !hasMore()"
+      >
+        <span class="material-icons-round" [class.icon-spin]="isLoadingMore()">
+          {{ isLoadingMore() ? 'sync' : (hasMore() ? 'expand_more' : 'check_circle') }}
+        </span>
+        <span>
+          {{ isLoadingMore() ? 'Scraping Page ' + (currentPage() + 1) + '...' : (hasMore() ? 'Load Next Page (Page ' + (currentPage() + 1) + ')' : 'All Available Jobs Loaded') }}
+        </span>
+      </button>
+    </div>
+
+    <!-- Scroll Anchor for IntersectionObserver Infinite Scrolling -->
+    <div #scrollAnchor class="scroll-anchor"></div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!isLoading() && jobs().length === 0" class="empty-state">
+    <span class="material-icons-round icon-empty">work_off</span>
+    <h3>No Jobs Found</h3>
+    <p>Try searching for broader keywords (e.g. "Engineer", "Developer", "Python") or reset your location.</p>
+  </div>
+
+  <!-- Add Custom Career Site Modal -->
+  <div class="modal-backdrop" *ngIf="showAddSiteModal()">
+    <div class="modal-card">
+      <div class="modal-header">
+        <div class="header-left">
+          <span class="material-icons-round icon-modal">add_business</span>
+          <h2>Add Target Company Career Portal</h2>
+        </div>
+        <button class="btn-close" (click)="showAddSiteModal.set(false)">
+          <span class="material-icons-round">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <p class="modal-desc">
+          Add any tech company's public career board (Greenhouse or Lever). CareerPilot will scrape real open software roles directly from their official portal.
+        </p>
+
+        <div class="form-group">
+          <label>Company Name</label>
+          <input
+            type="text"
+            [ngModel]="newSiteName()"
+            (ngModelChange)="newSiteName.set($event)"
+            placeholder="e.g. OpenAI, Cloudflare, Uber, Pinterest, Affirm..."
+          />
+        </div>
+
+        <div class="form-group">
+          <label>Portal Platform</label>
+          <select [ngModel]="newSiteType()" (ngModelChange)="newSiteType.set($event)">
+            <option value="greenhouse">Greenhouse (boards-api.greenhouse.io)</option>
+            <option value="lever">Lever (api.lever.co)</option>
+          </select>
+        </div>
+
+        <div class="active-sites-summary" *ngIf="agentService.careerSites().length > 0">
+          <span class="summary-lbl">Active Tracked Employers ({{ agentService.careerSites().length }}):</span>
+          <div class="sites-chips">
+            <span class="chip" *ngFor="let s of agentService.careerSites()">{{ s.name }} ({{ s.type }})</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn-cancel" (click)="showAddSiteModal.set(false)" [disabled]="isAddingSite()">Cancel</button>
+        <button class="btn-save-site" (click)="onAddNewCareerSite()" [disabled]="!newSiteName().trim() || isAddingSite()">
+          <span class="material-icons-round" [class.icon-spin]="isAddingSite()">{{ isAddingSite() ? 'sync' : 'save' }}</span>
+          <span>{{ isAddingSite() ? 'Adding & Scraping...' : 'Add & Scrape' }}</span>
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

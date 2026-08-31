@@ -1,0 +1,192 @@
+.kanban-card {
+  background: var(--bg-card);
+  border: 1.5px solid var(--border-color);
+  border-radius: var(--radius-md);
+  padding: 15px;
+  cursor: grab;
+  transition: all 0.18s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: var(--shadow-paper-sm);
+  position: relative;
+
+  &:hover {
+    background: var(--bg-card-hover);
+    border-color: var(--border-focus);
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-paper-md);
+  }
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.company-badge {
+  font-size: 0.76rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--primary);
+  background: var(--primary-light);
+  border: 1px solid var(--primary-soft-border);
+  padding: 2px 8px;
+  border-radius: 6px;
+}
+
+.btn-delete {
+  background: transparent;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+  transition: color 0.15s ease;
+
+  &:hover {
+    color: var(--accent-terracotta);
+  }
+
+  .material-icons-round {
+    font-size: 17px;
+  }
+}
+
+.role-title {
+  font-family: var(--font-serif);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  line-height: 1.35;
+  margin: 0;
+}
+
+.card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+
+  .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+
+    .icon {
+      font-size: 14px;
+      color: var(--text-muted);
+    }
+  }
+}
+
+.card-ai-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+}
+
+.score-pill {
+  font-size: 0.72rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 6px;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+
+  &.high-score {
+    background: var(--accent-sage-light);
+    color: var(--accent-sage);
+    border: 1px solid var(--accent-sage-border);
+  }
+
+  &.med-score {
+    background: var(--accent-amber-light);
+    color: var(--accent-amber);
+    border: 1px solid var(--accent-amber-border);
+  }
+
+  .icon-tiny {
+    font-size: 12px;
+  }
+}
+
+.resume-pill {
+  font-size: 0.72rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 6px;
+  background: var(--accent-navy-light);
+  color: var(--accent-navy);
+  border: 1px solid var(--accent-navy-border);
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+
+  .icon-tiny {
+    font-size: 12px;
+  }
+}
+
+.tags-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+
+  .tag-pill {
+    font-size: 0.7rem;
+    font-family: var(--font-mono);
+    font-weight: 600;
+    color: var(--text-secondary);
+    background: var(--bg-subtle);
+    border: 1px solid var(--border-color);
+    padding: 1px 6px;
+    border-radius: 4px;
+  }
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-top: 1px dashed var(--border-soft);
+  padding-top: 8px;
+  font-size: 0.74rem;
+  color: var(--text-muted);
+
+  .days-ago {
+    display: flex;
+    align-items: center;
+    gap: 3px;
+
+    .icon-small {
+      font-size: 13px;
+    }
+  }
+
+  .job-link {
+    color: var(--primary);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+
+    &:hover {
+      color: var(--primary-hover);
+    }
+
+    .icon-small {
+      font-size: 15px;
+    }
+  }
+}

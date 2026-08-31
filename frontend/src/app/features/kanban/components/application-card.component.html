@@ -1,0 +1,54 @@
+<div class="kanban-card" (click)="onCardClick($event)">
+  <div class="card-header">
+    <span class="company-badge">{{ application.company }}</span>
+    <button class="btn-delete" title="Delete application" (click)="onDeleteClick($event)">
+      <span class="material-icons-round">delete_outline</span>
+    </button>
+  </div>
+
+  <h4 class="role-title">{{ application.role }}</h4>
+
+  <div class="card-meta" *ngIf="application.location || application.salary_range">
+    <span class="meta-item" *ngIf="application.location">
+      <span class="material-icons-round icon">place</span>
+      {{ application.location }}
+    </span>
+    <span class="meta-item" *ngIf="application.salary_range">
+      <span class="material-icons-round icon">payments</span>
+      {{ application.salary_range }}
+    </span>
+  </div>
+
+  <div class="card-ai-badges">
+    <span class="score-pill" *ngIf="application.relevance_score" [ngClass]="application.relevance_score >= 80 ? 'high-score' : 'med-score'">
+      <span class="material-icons-round icon-tiny">auto_awesome</span>
+      {{ application.relevance_score }}% Match
+    </span>
+    <span class="resume-pill" *ngIf="application.resume_filename" title="Resume attached">
+      <span class="material-icons-round icon-tiny">description</span>
+      Resume
+    </span>
+  </div>
+
+  <div class="tags-container" *ngIf="application.tags && application.tags.length > 0">
+    <span class="tag-pill" *ngFor="let tag of application.tags">{{ tag }}</span>
+  </div>
+
+  <div class="card-footer">
+    <span class="days-ago">
+      <span class="material-icons-round icon-small">schedule</span>
+      {{ getDaysSinceDiscovered() === 0 ? 'Today' : getDaysSinceDiscovered() + 'd ago' }}
+    </span>
+    <a
+      *ngIf="application.job_url"
+      [href]="application.job_url"
+      target="_blank"
+      rel="noopener"
+      class="job-link"
+      (click)="$event.stopPropagation()"
+      title="View original job posting"
+    >
+      <span class="material-icons-round icon-small">open_in_new</span>
+    </a>
+  </div>
+</div>

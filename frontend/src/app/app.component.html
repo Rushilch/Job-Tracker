@@ -1,0 +1,243 @@
+<div class="app-layout">
+  <!-- Top Navigation Header -->
+  <header class="app-header">
+    <div class="brand-group">
+      <div class="brand-logo">
+        <span class="material-icons-round logo-icon">psychology</span>
+      </div>
+      <div class="brand-text">
+        <span class="brand-name">CareerPilot</span>
+        <span class="brand-tag">AI Job Intelligence</span>
+      </div>
+    </div>
+
+    <nav class="nav-links">
+      <a routerLink="/kanban" routerLinkActive="active" class="nav-link">
+        <span class="material-icons-round">view_kanban</span>
+        <span>Tracker</span>
+      </a>
+      <a routerLink="/jobs" routerLinkActive="active" class="nav-link">
+        <span class="material-icons-round">travel_explore</span>
+        <span>Job Discovery</span>
+      </a>
+      <a routerLink="/checker" routerLinkActive="active" class="nav-link">
+        <span class="material-icons-round">troubleshoot</span>
+        <span>JD Match Checker</span>
+      </a>
+      <a routerLink="/interview-lab" routerLinkActive="active" class="nav-link">
+        <span class="material-icons-round">code</span>
+        <span>Interview & DSA Lab</span>
+      </a>
+      <a routerLink="/dashboard" routerLinkActive="active" class="nav-link">
+        <span class="material-icons-round">analytics</span>
+        <span>Analytics</span>
+      </a>
+    </nav>
+
+    <div class="header-right">
+      <!-- AI Engine & Model Selector -->
+      <div class="model-badge-box">
+        <span class="pulse-dot"></span>
+        <span class="material-icons-round icon-sparkle">auto_awesome</span>
+        <select [ngModel]="agentService.selectedModel()" (ngModelChange)="onModelChange($event)" class="header-model-select">
+          <option *ngFor="let m of agentService.availableModels()" [value]="m.id">
+            {{ m.name }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Dark / Light Mode Toggle Button -->
+      <button (click)="toggleDarkMode()" class="btn-theme-toggle" [title]="isDarkMode() ? 'Switch to Light Mode' : 'Switch to Dark Mode'">
+        <span class="material-icons-round">{{ isDarkMode() ? 'light_mode' : 'dark_mode' }}</span>
+        <span>{{ isDarkMode() ? 'Light' : 'Dark' }}</span>
+      </button>
+
+      <!-- Settings & API Keys Button -->
+      <button (click)="openSettings()" class="btn-settings" title="Configure AI API Keys & Run Diagnostics">
+        <span class="material-icons-round">vpn_key</span>
+        <span>API Keys</span>
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Area -->
+  <main class="app-main">
+    <router-outlet></router-outlet>
+  </main>
+
+  <!-- AI API Keys & Diagnostics Modal -->
+  <div *ngIf="showSettingsModal()" class="settings-modal-backdrop" (click)="closeSettings()">
+    <div class="settings-modal-card" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div class="title-wrap">
+          <span class="material-icons-round icon-key">vpn_key</span>
+          <div>
+            <h2>AI Model Keys & Connection Diagnostics</h2>
+            <p class="modal-subtitle">Configure Gemini, OpenAI, Claude API keys or test real live LLM connections.</p>
+          </div>
+        </div>
+        <button (click)="closeSettings()" class="btn-close">
+          <span class="material-icons-round">close</span>
+        </button>
+      </div>
+
+      <div class="modal-body">
+        <!-- API Keys Form -->
+        <div class="keys-section">
+          <h3>🔑 External LLM Provider Keys</h3>
+
+          <div class="key-field">
+            <div class="key-label-row">
+              <label>Google Gemini API Key (Recommended)</label>
+              <a href="https://aistudio.google.com/app/apikey" target="_blank" class="link-helper">Get Free Gemini Key ↗</a>
+            </div>
+            <input
+              type="password"
+              [ngModel]="geminiKey()"
+              (ngModelChange)="geminiKey.set($event)"
+              placeholder="AIzaSy... (or set GEMINI_API_KEY in .env)"
+              class="key-input"
+            />
+          </div>
+
+          <div class="key-field">
+            <div class="key-label-row">
+              <label>OpenAI API Key</label>
+              <a href="https://platform.openai.com/api-keys" target="_blank" class="link-helper">Get OpenAI Key ↗</a>
+            </div>
+            <input
+              type="password"
+              [ngModel]="openaiKey()"
+              (ngModelChange)="openaiKey.set($event)"
+              placeholder="sk-proj-... (or set OPENAI_API_KEY in .env)"
+              class="key-input"
+            />
+          </div>
+
+          <div class="key-field">
+            <div class="key-label-row">
+              <label>Anthropic API Key</label>
+              <a href="https://console.anthropic.com/" target="_blank" class="link-helper">Get Claude Key ↗</a>
+            </div>
+            <input
+              type="password"
+              [ngModel]="anthropicKey()"
+              (ngModelChange)="anthropicKey.set($event)"
+              placeholder="sk-ant-... (or set ANTHROPIC_API_KEY in .env)"
+              class="key-input"
+            />
+          </div>
+
+          <div class="key-field">
+            <div class="key-label-row">
+              <label>GitHub Personal Access Token</label>
+              <a href="https://github.com/settings/tokens" target="_blank" class="link-helper">Get GitHub Token ↗</a>
+            </div>
+            <input
+              type="password"
+              [ngModel]="githubToken()"
+              (ngModelChange)="githubToken.set($event)"
+              placeholder="ghp_... (for matching real repositories)"
+              class="key-input"
+            />
+          </div>
+
+          <div class="save-actions">
+            <button (click)="onSaveKeys()" [disabled]="isSavingKeys()" class="btn-save-keys">
+              <span class="material-icons-round">save</span>
+              <span>{{ isSavingKeys() ? 'Saving Keys...' : 'Save & Activate Keys' }}</span>
+            </button>
+            <span *ngIf="saveSuccessMessage()" class="save-msg">{{ saveSuccessMessage() }}</span>
+          </div>
+        </div>
+
+        <hr class="divider" />
+
+        <!-- Live Diagnostics & Ping Test -->
+        <div class="diagnostics-section">
+          <h3>⚡ Live Connection Diagnostics</h3>
+          <p class="diag-hint">Click "Test Ping" to send a real live query to any model and measure response latency.</p>
+
+          <div class="model-test-grid">
+            <div class="model-test-card">
+              <div class="card-left">
+                <span class="model-name">Google Gemini 3.7 Flash</span>
+                <span class="model-badge-tier">Recommended</span>
+              </div>
+              <button
+                (click)="onTestConnection('gemini-3.7-flash')"
+                [disabled]="testingModel() === 'gemini-3.7-flash'"
+                class="btn-test-ping"
+              >
+                {{ testingModel() === 'gemini-3.7-flash' ? 'Pinging...' : 'Test Connection' }}
+              </button>
+            </div>
+            <div *ngIf="diagnosticResults()['gemini-3.7-flash']" class="diag-output" [ngClass]="diagnosticResults()['gemini-3.7-flash'].status">
+              {{ diagnosticResults()['gemini-3.7-flash'].message }}
+              <span *ngIf="diagnosticResults()['gemini-3.7-flash'].latency_ms" class="latency-tag">
+                ⏱ {{ diagnosticResults()['gemini-3.7-flash'].latency_ms }}ms
+              </span>
+            </div>
+
+            <div class="model-test-card">
+              <div class="card-left">
+                <span class="model-name">Google Gemini 3.5 Flash Lite</span>
+                <span class="model-badge-tier">Ultra Fast</span>
+              </div>
+              <button
+                (click)="onTestConnection('gemini-3.5-flash-lite')"
+                [disabled]="testingModel() === 'gemini-3.5-flash-lite'"
+                class="btn-test-ping"
+              >
+                {{ testingModel() === 'gemini-3.5-flash-lite' ? 'Pinging...' : 'Test Connection' }}
+              </button>
+            </div>
+            <div *ngIf="diagnosticResults()['gemini-3.5-flash-lite']" class="diag-output" [ngClass]="diagnosticResults()['gemini-3.5-flash-lite'].status">
+              {{ diagnosticResults()['gemini-3.5-flash-lite'].message }}
+              <span *ngIf="diagnosticResults()['gemini-3.5-flash-lite'].latency_ms" class="latency-tag">
+                ⏱ {{ diagnosticResults()['gemini-3.5-flash-lite'].latency_ms }}ms
+              </span>
+            </div>
+
+            <div class="model-test-card">
+              <div class="card-left">
+                <span class="model-name">OpenAI GPT-4o Mini</span>
+                <span class="model-badge-tier">Production</span>
+              </div>
+              <button
+                (click)="onTestConnection('gpt-4o-mini')"
+                [disabled]="testingModel() === 'gpt-4o-mini'"
+                class="btn-test-ping"
+              >
+                {{ testingModel() === 'gpt-4o-mini' ? 'Pinging...' : 'Test Connection' }}
+              </button>
+            </div>
+            <div *ngIf="diagnosticResults()['gpt-4o-mini']" class="diag-output" [ngClass]="diagnosticResults()['gpt-4o-mini'].status">
+              {{ diagnosticResults()['gpt-4o-mini'].message }}
+              <span *ngIf="diagnosticResults()['gpt-4o-mini'].latency_ms" class="latency-tag">
+                ⏱ {{ diagnosticResults()['gpt-4o-mini'].latency_ms }}ms
+              </span>
+            </div>
+
+            <div class="model-test-card">
+              <div class="card-left">
+                <span class="model-name">Offline NLP Heuristics Engine</span>
+                <span class="model-badge-tier local">Always Ready</span>
+              </div>
+              <button
+                (click)="onTestConnection('heuristic')"
+                [disabled]="testingModel() === 'heuristic'"
+                class="btn-test-ping"
+              >
+                {{ testingModel() === 'heuristic' ? 'Pinging...' : 'Test Connection' }}
+              </button>
+            </div>
+            <div *ngIf="diagnosticResults()['heuristic']" class="diag-output" [ngClass]="diagnosticResults()['heuristic'].status">
+              {{ diagnosticResults()['heuristic'].message }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

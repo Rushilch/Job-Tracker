@@ -1,0 +1,152 @@
+services:
+  traefik:
+    image: traefik:v3.1
+    container_name: jobsearch-traefik
+    command:
+      - "--api.insecure=true"
+      - "--api.dashboard=true"
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entryPoints.web.address=:80"
+    ports:
+      - "80:80"
+      - "8080:8080" # Traefik Web UI Dashboard
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    networks:
+      - jobsearch-net
+
+  mongodb:
+    image: mongo:7.0
+    container_name: jobsearch-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - jobsearch-net
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  application-service:
+    build:
+      context: .
+      dockerfile: services/application/Dockerfile
+    container_name: jobsearch-application-service
+    restart: unless-stopped
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/job_search
+      - MONGODB_DB_NAME=job_search
+      - ENVIRONMENT=development
+      - LOG_LEVEL=INFO
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - jobsearch-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.app-service.rule=PathPrefix(`/api/applications`)"
+      - "traefik.http.routers.app-service.entrypoints=web"
+      - "traefik.http.services.app-service.loadbalancer.server.port=8001"
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: services/auth/Dockerfile
+    container_name: jobsearch-auth-service
+    restart: unless-stopped
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/job_search
+      - ENVIRONMENT=development
+      - LOG_LEVEL=INFO
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - jobsearch-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.auth-service.rule=PathPrefix(`/api/auth`)"
+      - "traefik.http.routers.auth-service.entrypoints=web"
+      - "traefik.http.services.auth-service.loadbalancer.server.port=8002"
+
+  agent-service:
+    build:
+      context: .
+      dockerfile: services/agent/Dockerfile
+    container_name: jobsearch-agent-service
+    restart: unless-stopped
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/job_search
+      - APPLICATION_SERVICE_URL=http://application-service:8001
+      - ENVIRONMENT=development
+      - LOG_LEVEL=INFO
+      - GEMINI_API_KEY=${GEMINI_API_KEY:-}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY:-}
+      - OPENAI_API_KEY=${OPENAI_API_KEY:-}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY:-}
+      - GITHUB_TOKEN=${GITHUB_TOKEN:-}
+      - TAVILY_API_KEY=${TAVILY_API_KEY:-}
+    depends_on:
+      mongodb:
+        condition: service_healthy
+      application-service:
+        condition: service_started
+    networks:
+      - jobsearch-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.agent-service.rule=PathPrefix(`/api/agent`)"
+      - "traefik.http.routers.agent-service.entrypoints=web"
+      - "traefik.http.services.agent-service.loadbalancer.server.port=8003"
+
+  notification-service:
+    build:
+      context: .
+      dockerfile: services/notification/Dockerfile
+    container_name: jobsearch-notification-service
+    restart: unless-stopped
+    environment:
+      - MONGODB_URI=mongodb://mongodb:27017/job_search
+      - ENVIRONMENT=development
+      - LOG_LEVEL=INFO
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - jobsearch-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.notification-service.rule=PathPrefix(`/api/notifications`)"
+      - "traefik.http.routers.notification-service.entrypoints=web"
+      - "traefik.http.services.notification-service.loadbalancer.server.port=8004"
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: jobsearch-frontend
+    restart: unless-stopped
+    networks:
+      - jobsearch-net
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
+      - "traefik.http.routers.frontend.entrypoints=web"
+      - "traefik.http.routers.frontend.priority=1"
+      - "traefik.http.services.frontend.loadbalancer.server.port=80"
+
+volumes:
+  mongodb_data:
+
+networks:
+  jobsearch-net:
+    driver: bridge

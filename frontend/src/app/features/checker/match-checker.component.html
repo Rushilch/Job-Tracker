@@ -1,0 +1,212 @@
+<div class="checker-container">
+  <header class="checker-header">
+    <div>
+      <h1>Resume vs Job Description ATS Match Scanner</h1>
+      <p class="subtitle">Upload your resume to calculate real ATS pass scores, role alignment, missing keywords & necessary changes</p>
+    </div>
+    <div class="model-select-wrap">
+      <span class="material-icons-round icon-ai">auto_awesome</span>
+      <select [ngModel]="agentService.selectedModel()" (ngModelChange)="agentService.selectedModel.set($event)">
+        <option *ngFor="let m of agentService.availableModels()" [value]="m.id">
+          {{ m.name }}
+        </option>
+      </select>
+    </div>
+  </header>
+
+  <div class="checker-layout">
+    <!-- Input Column -->
+    <div class="input-panel">
+      <div class="form-row-2">
+        <div class="form-group">
+          <label>Target Company</label>
+          <input type="text" [ngModel]="company()" (ngModelChange)="company.set($event)" placeholder="e.g. Google, Stripe, Meta" />
+        </div>
+        <div class="form-group">
+          <label>Target Role</label>
+          <input type="text" [ngModel]="role()" (ngModelChange)="role.set($event)" placeholder="e.g. Senior Software Engineer" />
+        </div>
+      </div>
+
+      <!-- Resume Input Mode Toggle -->
+      <div class="resume-mode-switch">
+        <button
+          class="mode-btn"
+          [class.active]="inputMode() === 'upload'"
+          (click)="inputMode.set('upload')"
+        >
+          <span class="material-icons-round">upload_file</span>
+          <span>Upload Resume (PDF / TXT)</span>
+        </button>
+        <button
+          class="mode-btn"
+          [class.active]="inputMode() === 'paste'"
+          (click)="inputMode.set('paste')"
+        >
+          <span class="material-icons-round">edit_note</span>
+          <span>Paste Text / Skills</span>
+        </button>
+      </div>
+
+      <!-- File Upload Zone -->
+      <div class="upload-dropzone" *ngIf="inputMode() === 'upload'">
+        <input
+          type="file"
+          id="resumeFileInput"
+          (change)="onFileSelected($event)"
+          accept=".pdf,.txt,.md"
+          class="file-input-hidden"
+        />
+        <label for="resumeFileInput" class="dropzone-label">
+          <span class="material-icons-round icon-cloud">cloud_upload</span>
+          <span class="drop-title">{{ fileName() ? fileName() : 'Choose Resume (PDF or TXT)' }}</span>
+          <span class="drop-sub">{{ fileName() ? 'File loaded ready for ATS scan' : 'Drag & drop or click to browse' }}</span>
+        </label>
+      </div>
+
+      <!-- Paste Text Area -->
+      <div class="form-group" *ngIf="inputMode() === 'paste'">
+        <label>Your Skills, Experience, or Resume Bio</label>
+        <textarea
+          rows="4"
+          [ngModel]="skillsText()"
+          (ngModelChange)="skillsText.set($event)"
+          placeholder="Paste candidate resume bio or comma-separated technical skills..."
+        ></textarea>
+      </div>
+
+      <!-- Job Description Area -->
+      <div class="form-group">
+        <div class="label-row">
+          <label>Target Job Description (JD)</label>
+          <span class="hint-text">Paste the full job requirements</span>
+        </div>
+        <textarea
+          rows="8"
+          [ngModel]="jdText()"
+          (ngModelChange)="jdText.set($event)"
+          placeholder="Paste full Job Description here..."
+        ></textarea>
+      </div>
+
+      <button class="btn-analyze" (click)="onRunAnalysis()" [disabled]="isLoading()">
+        <span class="material-icons-round icon-spin" *ngIf="isLoading()">sync</span>
+        <span class="material-icons-round" *ngIf="!isLoading()">fact_check</span>
+        <span>{{ isLoading() ? 'Running ATS & Alignment Audit...' : 'Scan ATS Score & Alignment' }}</span>
+      </button>
+    </div>
+
+    <!-- Results Column -->
+    <div class="results-panel">
+      <!-- Empty State -->
+      <div class="empty-results-card" *ngIf="!result() && !isLoading()">
+        <span class="material-icons-round icon-large">document_scanner</span>
+        <h3>Ready for ATS Evaluation</h3>
+        <p>Upload a resume file and paste a Job Description to get an ATS Compatibility Score, Role Alignment review, and necessary resume changes.</p>
+      </div>
+
+      <!-- Loading State -->
+      <div class="loading-card" *ngIf="isLoading()">
+        <div class="spinner-ring"></div>
+        <h4>Auditing ATS Compatibility with {{ agentService.selectedModel() }}...</h4>
+        <p>Parsing resume tokens, calculating keyword density against JD, and diagnosing formatting flaws.</p>
+      </div>
+
+      <!-- Result View -->
+      <div class="analysis-results" *ngIf="result() && !isLoading()">
+        <!-- ATS Score Header -->
+        <div class="score-header-card">
+          <div class="score-dial">
+            <span class="score-num">{{ result()?.ats_score || result()?.match_percentage }}%</span>
+            <span class="score-lbl">ATS SCORE</span>
+          </div>
+          <div class="verdict-info">
+            <div class="badge-row">
+              <span class="verdict-pill verdict-strong" *ngIf="result()?.ats_rating">
+                {{ result()?.ats_rating }}
+              </span>
+              <span class="verdict-pill verdict-comp" *ngIf="result()?.verdict">
+                {{ result()?.verdict }}
+              </span>
+            </div>
+            <p class="strengths-text">{{ result()?.role_alignment_summary || result()?.strengths_summary }}</p>
+            <span class="model-badge">Engine: {{ result()?.model_used }}</span>
+          </div>
+        </div>
+
+        <!-- Necessary Changes Section -->
+        <div class="necessary-changes-card" *ngIf="result()?.necessary_changes?.length">
+          <div class="card-head">
+            <span class="material-icons-round icon-warn">error_outline</span>
+            <h3>Necessary Resume Changes Before Applying</h3>
+          </div>
+          <ul class="changes-list">
+            <li *ngFor="let change of result()?.necessary_changes">
+              <span class="bullet-dot">•</span>
+              <span>{{ change }}</span>
+            </li>
+          </ul>
+        </div>
+
+        <!-- Skills & Missing Keywords Matrix -->
+        <div class="skills-split-card">
+          <div class="skill-box match-box">
+            <div class="box-title">
+              <span class="material-icons-round">check_circle</span>
+              <span>Matched Keywords ({{ result()?.matched_skills?.length }})</span>
+            </div>
+            <div class="pill-cloud">
+              <span class="pill-matched" *ngFor="let s of result()?.matched_skills">{{ s }}</span>
+            </div>
+          </div>
+
+          <div class="skill-box missing-box">
+            <div class="box-title">
+              <span class="material-icons-round">dangerous</span>
+              <span>Missing Critical ATS Keywords ({{ result()?.missing_critical_keywords?.length || result()?.missing_skills?.length }})</span>
+            </div>
+            <div class="pill-cloud">
+              <span class="pill-missing" *ngFor="let s of result()?.missing_critical_keywords || result()?.missing_skills">{{ s }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Tailored High-Impact Bullets Ready to Copy -->
+        <div class="tailored-bullets-card" *ngIf="result()?.tailored_bullets?.length">
+          <div class="card-head">
+            <span class="material-icons-round icon-spark">auto_fix_high</span>
+            <h3>Tailored High-Impact Resume Bullets (Ready to Copy)</h3>
+          </div>
+          <div class="bullet-items-list">
+            <div class="bullet-item" *ngFor="let b of result()?.tailored_bullets; let i = index">
+              <p class="b-text">{{ b }}</p>
+              <button class="btn-copy" (click)="onCopyBullet(b, i)">
+                <span class="material-icons-round">{{ copiedIndex() === i ? 'check' : 'content_copy' }}</span>
+                <span>{{ copiedIndex() === i ? 'Copied' : 'Copy' }}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Interview Talking Points -->
+        <div class="talking-points-card">
+          <h4>
+            <span class="material-icons-round">tips_and_updates</span>
+            Recommended Interview & Cover Letter Talking Points
+          </h4>
+          <ul>
+            <li *ngFor="let tp of result()?.talking_points">{{ tp }}</li>
+          </ul>
+        </div>
+
+        <!-- Action Row -->
+        <div class="action-footer">
+          <button class="btn-save-kanban" (click)="onSaveToTracker()" [disabled]="isSaving()">
+            <span class="material-icons-round">{{ saveSuccess() ? 'check' : 'add_task' }}</span>
+            <span>{{ saveSuccess() ? 'Saved to Tracker! Redirecting...' : 'Save Job & ATS Report to Kanban' }}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

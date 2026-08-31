@@ -1,0 +1,256 @@
+<div class="kanban-page">
+  <!-- Top Action Bar -->
+  <div class="action-bar">
+    <div class="search-box">
+      <span class="material-icons-round search-icon">search</span>
+      <input
+        type="text"
+        placeholder="Filter by company, role, or skill tag..."
+        [ngModel]="searchQuery()"
+        (ngModelChange)="onSearchChange($event)"
+      />
+      <button *ngIf="searchQuery()" class="btn-clear" (click)="onSearchChange('')">
+        <span class="material-icons-round">close</span>
+      </button>
+    </div>
+
+    <div class="action-buttons">
+      <button class="btn-export" (click)="onExportExcel()" title="Export all applications to styled Excel sheet (.xlsx)">
+        <span class="material-icons-round">table_view</span>
+        <span>Export Excel</span>
+      </button>
+      <button class="btn-refresh" (click)="loadApplications()" title="Refresh applications">
+        <span class="material-icons-round">refresh</span>
+      </button>
+      <button class="btn-new" (click)="openCreateModal()">
+        <span class="material-icons-round">add</span>
+        <span>New Application</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- Loading State -->
+  <div class="loading-bar" *ngIf="applicationService.isLoading()">
+    <div class="loading-indicator"></div>
+  </div>
+
+  <!-- Kanban Columns Grid -->
+  <div class="kanban-grid" cdkDropListGroup>
+    <div class="kanban-column" *ngFor="let col of columns()">
+      <div class="column-header">
+        <div class="column-title-group">
+          <span class="status-dot" [ngClass]="col.badgeClass"></span>
+          <h3 class="column-title">{{ col.title }}</h3>
+        </div>
+        <span class="count-badge">{{ col.items.length }}</span>
+      </div>
+
+      <!-- Drop List -->
+      <div
+        class="card-list"
+        [id]="'list-' + col.id"
+        cdkDropList
+        [cdkDropListData]="col.items"
+        [cdkDropListConnectedTo]="connectedDropLists()"
+        (cdkDropListDropped)="onDrop($event, col.id)"
+      >
+        <app-application-card
+          *ngFor="let item of col.items"
+          [application]="item"
+          cdkDrag
+          [cdkDragData]="item"
+          (delete)="handleDeleteApplication($event)"
+          (select)="handleSelectApplication($event)"
+        ></app-application-card>
+
+        <!-- Empty state placeholder -->
+        <div class="empty-column-placeholder" *ngIf="col.items.length === 0">
+          <span class="material-icons-round icon-empty">inbox</span>
+          <p>No applications</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create Application Modal -->
+  <app-create-dialog
+    *ngIf="showCreateModal()"
+    (close)="closeCreateModal()"
+    (create)="handleCreateApplication($event)"
+  ></app-create-dialog>
+
+  <!-- Application Detail Modal -->
+  <div class="detail-backdrop" *ngIf="selectedAppForDetail()" (click)="closeDetailModal()">
+    <div class="detail-card" (click)="$event.stopPropagation()">
+      <div class="detail-header">
+        <div>
+          <span class="detail-company">{{ selectedAppForDetail()?.company }}</span>
+          <h2>{{ selectedAppForDetail()?.role }}</h2>
+        </div>
+        <button class="btn-close" (click)="closeDetailModal()">
+          <span class="material-icons-round">close</span>
+        </button>
+      </div>
+
+      <div class="detail-body">
+        <div class="detail-meta-grid">
+          <div class="meta-block">
+            <span class="meta-label">Status</span>
+            <span class="status-tag status-{{ selectedAppForDetail()?.status }}">
+              {{ selectedAppForDetail()?.status }}
+            </span>
+          </div>
+          <div class="meta-block" *ngIf="selectedAppForDetail()?.location">
+            <span class="meta-label">Location</span>
+            <span class="meta-value">{{ selectedAppForDetail()?.location }}</span>
+          </div>
+          <div class="meta-block" *ngIf="selectedAppForDetail()?.salary_range">
+            <span class="meta-label">Compensation</span>
+            <span class="meta-value">{{ selectedAppForDetail()?.salary_range }}</span>
+          </div>
+          <div class="meta-block" *ngIf="selectedAppForDetail()?.job_url">
+            <span class="meta-label">Job Posting</span>
+            <a [href]="selectedAppForDetail()?.job_url" target="_blank" class="link-btn">
+              View Posting <span class="material-icons-round">open_in_new</span>
+            </a>
+          </div>
+        </div>
+
+        <!-- Resume Upload & Attachment Block -->
+        <div class="detail-section resume-box">
+          <div class="section-header-flex">
+            <div class="section-title-icon">
+              <span class="material-icons-round">description</span>
+              <h4>Resume & File Attachment</h4>
+            </div>
+            <div class="upload-actions">
+              <label class="btn-upload-file" [class.disabled]="isUploading()">
+                <span class="material-icons-round">{{ isUploading() ? 'sync' : 'cloud_upload' }}</span>
+                <span>{{ isUploading() ? 'Uploading...' : 'Upload Resume' }}</span>
+                <input type="file" (change)="onResumeFileSelected($event)" accept=".pdf,.txt,.docx,.json" [disabled]="isUploading()" style="display:none;" />
+              </label>
+              <button
+                class="btn-tailor-ai"
+                (click)="triggerTailorResume()"
+                [disabled]="isTailoring()"
+                title="Run AI Resume Tailoring against this Job Description"
+              >
+                <span class="material-icons-round icon-sparkle">{{ isTailoring() ? 'sync' : 'auto_awesome' }}</span>
+                <span>{{ isTailoring() ? 'Tailoring with AI...' : 'AI Tailor Resume' }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="resume-status-card" *ngIf="selectedAppForDetail()?.resume_filename">
+            <div class="file-info">
+              <span class="material-icons-round file-icon">picture_as_pdf</span>
+              <div>
+                <span class="file-name">{{ selectedAppForDetail()?.resume_filename }}</span>
+                <span class="file-meta" *ngIf="selectedAppForDetail()?.resume_text">
+                  Extracted {{ selectedAppForDetail()?.resume_text?.length }} characters of text
+                </span>
+              </div>
+            </div>
+          </div>
+
+          <div class="empty-resume-hint" *ngIf="!selectedAppForDetail()?.resume_filename">
+            <span class="material-icons-round">upload_file</span>
+            <span>No resume uploaded yet. Click <strong>Upload Resume</strong> to attach your PDF/TXT resume.</span>
+          </div>
+        </div>
+
+        <!-- AI Tailored Results Section -->
+        <div class="detail-section ai-tailored-container" *ngIf="selectedAppForDetail()?.tailored_resume_summary || selectedAppForDetail()?.tailored_bullets?.length">
+          <div class="ai-header">
+            <div class="ai-title">
+              <span class="material-icons-round">psychology</span>
+              <h4>AI Tailored Experience & Keywords</h4>
+            </div>
+            <div class="score-badge" *ngIf="selectedAppForDetail()?.relevance_score">
+              <span>Match Score</span>
+              <strong>{{ selectedAppForDetail()?.relevance_score }}%</strong>
+            </div>
+          </div>
+
+          <!-- Matched & Missing Skills -->
+          <div class="skills-alignment-row">
+            <div class="skills-col" *ngIf="selectedAppForDetail()?.matched_skills?.length">
+              <span class="skill-label matched-label">
+                <span class="material-icons-round">check_circle</span> Matched Skills
+              </span>
+              <div class="skills-pills">
+                <span class="pill pill-match" *ngFor="let s of selectedAppForDetail()?.matched_skills">{{ s }}</span>
+              </div>
+            </div>
+            <div class="skills-col" *ngIf="selectedAppForDetail()?.missing_skills?.length">
+              <span class="skill-label missing-label">
+                <span class="material-icons-round">info</span> Skills to Prep / Foreground
+              </span>
+              <div class="skills-pills">
+                <span class="pill pill-missing" *ngFor="let s of selectedAppForDetail()?.missing_skills">{{ s }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Tailored Executive Summary -->
+          <div class="tailored-subcard" *ngIf="selectedAppForDetail()?.tailored_resume_summary">
+            <div class="subcard-header">
+              <span>Tailored Executive Summary</span>
+              <button class="btn-copy" (click)="copyToClipboard(selectedAppForDetail()?.tailored_resume_summary!)">
+                <span class="material-icons-round">content_copy</span> Copy Summary
+              </button>
+            </div>
+            <p class="summary-text">{{ selectedAppForDetail()?.tailored_resume_summary }}</p>
+          </div>
+
+          <!-- Tailored Bullets -->
+          <div class="tailored-subcard" *ngIf="selectedAppForDetail()?.tailored_bullets?.length">
+            <div class="subcard-header">
+              <span>Tailored Experience Bullet Points</span>
+            </div>
+            <div class="bullets-list">
+              <div class="bullet-item" *ngFor="let b of selectedAppForDetail()?.tailored_bullets; let i = index">
+                <span class="bullet-dot">•</span>
+                <p class="bullet-text">{{ b }}</p>
+                <button class="btn-copy-sm" (click)="copyToClipboard(b, i)" [title]="copiedIndex() === i ? 'Copied!' : 'Copy bullet'">
+                  <span class="material-icons-round">{{ copiedIndex() === i ? 'check' : 'content_copy' }}</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="detail-section" *ngIf="selectedAppForDetail()?.tags?.length">
+          <h4>Tags</h4>
+          <div class="tags-row">
+            <span class="tag-badge" *ngFor="let t of selectedAppForDetail()?.tags">{{ t }}</span>
+          </div>
+        </div>
+
+        <div class="detail-section" *ngIf="selectedAppForDetail()?.notes">
+          <h4>Notes</h4>
+          <p class="notes-text">{{ selectedAppForDetail()?.notes }}</p>
+        </div>
+
+        <div class="detail-section" *ngIf="selectedAppForDetail()?.jd_snapshot">
+          <h4>Job Description Snapshot</h4>
+          <div class="jd-box">{{ selectedAppForDetail()?.jd_snapshot }}</div>
+        </div>
+
+        <div class="detail-section">
+          <h4>Application Timeline & Events</h4>
+          <div class="timeline-container">
+            <div class="timeline-step" *ngFor="let t of selectedAppForDetail()?.timeline">
+              <div class="step-dot"></div>
+              <div class="step-content">
+                <span class="step-date">{{ t.date | date: 'medium' }}</span>
+                <span class="step-event">{{ t.event }}</span>
+                <p class="step-note" *ngIf="t.notes">{{ t.notes }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
