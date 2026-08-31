@@ -53,12 +53,12 @@ graph TB
 - **3D Interactive Flashcards Revision Deck**: Review technical concepts, system design tricks, and patterns in an interactive study deck with 3D flip card animations and keyboard navigation (`Space`, `←`, `→`, `Esc`).
 - **Excel Export**: One-click download of all company-scoped DSA questions, interview loops, and flashcards into a multi-sheet spreadsheet.
 
-### 3. 🔎 Live Job Search & Discovery Engine
+### 3. Live Job Search & Discovery Engine
 - **Multi-Provider Ingestion**: Aggregate live listings from RemoteOK, Jooble, Adzuna, and Arbeitnow with query, country, and remote filters.
 - **AI Fit Scoring**: Automatically evaluate job requirements against candidate skills and calculate percentage match scores.
 - **One-Click Import**: Directly transfer discovered postings into the Kanban tracker.
 
-### 4. 🎯 ATS & JD Match Scanner
+### 4. ATS & JD Match Scanner
 - **ATS Pass Rate Audit**: Scan uploaded resumes or candidate bios against full job descriptions.
 - **Role Alignment & Keyword Gaps**: Identify critical matched and missing keywords, hard skill requirements, and prioritized resume adjustments.
 
@@ -214,7 +214,4 @@ npm run build
 ```
 
 ---
-
-## 📄 License
-MIT License © 2026 CareerPilot Contributors.
 
