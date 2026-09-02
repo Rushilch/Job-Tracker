@@ -1,4 +1,4 @@
-# CareerPilot — AI-Powered Job Search & Technical Interview Intelligence Platform
+# JobTrackly— AI-Powered Job Search & Technical Interview Intelligence Platform
 
 > **End-to-End Autonomous Job Search, Application Tracking & Technical Interview Lab**  
 > Architected as a modular, containerized Python microservices ecosystem with a reactive Angular frontend, Beanie async ODM on MongoDB 7.0, multi-provider LLM integrations (Gemini, Claude, GPT-4o), and a tactile Catppuccin Paper Mesh design system.
